@@ -1,0 +1,49 @@
+.logo {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    background: #fff;
+    border-bottom: 1px solid #e2dddd;
+    border-right: 1px solid #e2dddd;
+    padding: 0 24px;
+  }
+  
+.app-name {
+    color: #000000;
+    font-weight: 500;
+    font-size: 18px;
+}
+
+.header {
+    background: #fff;
+    border-bottom: 1px solid #e2dddd;
+    padding: 0;
+}
+  
+.sider {
+    overflow: auto;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    border-right: 1px solid #e2dddd;
+}
+
+.content {
+    background: #fff;
+}
+  
+.ant-layout-sider {
+    background: #fff;
+}
+  
+.site-layout .site-layout-background {
+    background: #fff;
+}
+  
+.site-layout .site-layout-background {
+    background: #fff;
+}
+
+.ant-menu {
+    height: 93.2%;
+}
