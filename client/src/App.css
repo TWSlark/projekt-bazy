@@ -30,6 +30,31 @@
 
 .content {
     background: #fff;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.contentTop {
+    background: #f3f3f3;
+    padding: 10px;
+    font-size: large;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.contentBottom {
+    background: #f3f3f3;
+    padding: 10px;
+    font-size: large;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 10px;
+    flex-grow: 1;
 }
   
 .ant-layout-sider {
