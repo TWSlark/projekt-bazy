@@ -2,6 +2,13 @@ import React from 'react';
 import './App.css';
 import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+
+import Pulpit from './pages/Pulpit';
+import Kalendarz from './pages/Kalendarz';
+import Zadania from './pages/Zadania';
+import Czlonkowie from './pages/Czlonkowie';
+import Ustawienia from './pages/Ustawienia';
 
 const { Header, Content, Sider } = Layout;
 
@@ -16,11 +23,11 @@ function getItem(label, key, icon, children, type) {
 }
 
 const items = [
-  getItem('Pulpit', '1', <AppstoreOutlined />),
-  getItem('Kalendarz', '2', <CalendarOutlined />),
-  getItem('Zadania', '3', <CalculatorOutlined />),
-  getItem('Członkowie', '4', <UserOutlined />),
-  getItem('Ustawienia', '5', <SettingOutlined />),
+  getItem(<Link to="/pulpit">Pulpit</Link>, '1', <AppstoreOutlined />),
+  getItem(<Link to="/kalendarz">Kalendarz</Link>, '2', <CalendarOutlined />),
+  getItem(<Link to="/zadania">Zadania</Link>, '3', <CalculatorOutlined />),
+  getItem(<Link to="/czlonkowie">Członkowie</Link>, '4', <UserOutlined />),
+  getItem(<Link to="/ustawienia">Ustawienia</Link>, '5', <SettingOutlined />),
   { type: 'divider' },
   getItem('Moje projekty', 'grp', null, [
     getItem('Projekt 1', '11'), getItem('Projekt 2', '12')
@@ -28,7 +35,6 @@ const items = [
 ];
 
 const App = () => {
-  const [currentPage, setCurrentPage] = React.useState('Pulpit');
 
   const onClick = (e) => {
     console.log('click ', e);
@@ -50,7 +56,15 @@ const App = () => {
       </Sider>
       <Layout className="site-layout">
         <Header className="header" />
-        <Content className="content">{currentPage}</Content>
+        <Content className="content">
+        <Routes>
+            <Route path="/pulpit" element={<Pulpit />} />
+            <Route path="/kalendarz" element={<Kalendarz />} />
+            <Route path="/zadania" element={<Zadania />} />
+            <Route path="/czlonkowie" element={<Czlonkowie />} />
+            <Route path="/ustawienia" element={<Ustawienia />} />
+          </Routes>
+          </Content>
       </Layout>
     </Layout>
   );
