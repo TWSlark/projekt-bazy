@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const app = express();
+const mysql = require('mysql2');
 const cors = require('cors');
 
 app.use(cors());
@@ -71,3 +72,6 @@ app.get('/projects', (req, res) => {
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
 });
+
+
+//! ALTER TABLE uzytkownik AUTO_INCREMENT = 1; resetowanie auto increment
