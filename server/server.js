@@ -4,23 +4,68 @@ const app = express();
 const cors = require('cors');
 
 app.use(cors());
+app.use(express.json());
 
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'taskify'
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "taskify",
+  port: 3306,
+  authPlugin: 'mysql_native_password'
+})
+
+app.post('/signup', (req, res) => {
+  const sql = "INSERT INTO uzytkownik (`imie`,`nazwisko`,`data_urodzenia`,`plec`,`email`,`haslo`) VALUES (?);"
+  const values = [
+    req.body.imie,
+    req.body.nazwisko,
+    req.body.data,
+    req.body.plec,
+    req.body.email,
+    req.body.haslo
+  ]
+  console.log("SQL Query:", sql);
+  console.log(values);                //! W razie debugowania
+  console.log(req.body);
+  
+  db.query(sql, [values], (err,data) => {
+    if (err) {
+      return res.json("Error");
+    }
+    return res.json(data);
+  })
+});
+
+db.connect((err) => {
+  if (err) {
+    console.error('Błąd połączenia z bazą danych:', err);
+    return;
+  }
+  console.log('Połączenie z bazą danych zostało ustanowione');
+});
+
+
+app.post('/login', (req, res) => {
+  const sql = "SELECT * FROM uzytkownik WHERE `email` = ? AND `haslo` = BINARY ?";
+
+  db.query(sql, [req.body.email, req.body.haslo], (err,data) => {
+    if (err) {
+      return res.json("Error");
+    }
+    if (data.length > 0) {
+      return res.json("Git");
+    } else {
+      return res.json("Nie git");
+    }
+  })
 });
 
 app.get('/projects', (req, res) => {
-  connection.query('SELECT * FROM projekty', (error, results, fields) => {
+  db.query('SELECT * FROM projekty', (error, results, fields) => {
     if (error) throw error;
     res.json(results);
   });
-});
-
-app.get('/', (req, res) => {
-  res.redirect('/pulpit');
 });
 
 app.listen(5000, () => {

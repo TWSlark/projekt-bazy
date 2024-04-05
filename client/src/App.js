@@ -9,8 +9,26 @@ import Kalendarz from './pages/Kalendarz';
 import Zadania from './pages/Zadania';
 import Czlonkowie from './pages/Czlonkowie';
 import Ustawienia from './pages/Ustawienia';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 const { Header, Content, Sider } = Layout;
+
+const App = () => {
+  return (
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route element={<MainLayout />}>
+          <Route path="/pulpit" element={<Pulpit />} />
+          <Route path="/kalendarz" element={<Kalendarz />} />
+          <Route path="/zadania" element={<Zadania />} />
+          <Route path="/czlonkowie" element={<Czlonkowie />} />
+          <Route path="/ustawienia" element={<Ustawienia />} />
+        </Route>
+      </Routes>
+  );
+};
 
 function getItem(label, key, icon, children, type) {
   return {
@@ -34,7 +52,7 @@ const items = [
   ], 'group'),
 ];
 
-const App = () => {
+const MainLayout = () => {
 
   const onClick = (e) => {
     console.log('click ', e);
@@ -56,14 +74,14 @@ const App = () => {
       </Sider>
       <Layout className="site-layout">
         <Header className="header" />
-        <Content className="content">
-        <Routes>
-            <Route path="/pulpit" element={<Pulpit />} />
-            <Route path="/kalendarz" element={<Kalendarz />} />
-            <Route path="/zadania" element={<Zadania />} />
-            <Route path="/czlonkowie" element={<Czlonkowie />} />
-            <Route path="/ustawienia" element={<Ustawienia />} />
-          </Routes>
+          <Content className="content">
+            <Routes>
+              <Route path="/pulpit" element={<Pulpit />} />
+              <Route path="/kalendarz" element={<Kalendarz />} />
+              <Route path="/zadania" element={<Zadania />} />
+              <Route path="/czlonkowie" element={<Czlonkowie />} />
+              <Route path="/ustawienia" element={<Ustawienia />} />
+            </Routes>
           </Content>
       </Layout>
     </Layout>

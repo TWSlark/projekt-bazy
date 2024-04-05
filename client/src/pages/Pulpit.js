@@ -1,6 +1,6 @@
 import { UserOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
-import { Avatar, Tooltip, Row, Col, Flex, Progress } from 'antd';
+import { Avatar, Tooltip, Row, Col, Progress } from 'antd';
 
 
 const Pulpit = () => {
