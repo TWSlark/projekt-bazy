@@ -16,20 +16,20 @@ const db = mysql.createConnection({
 })
 
 app.post('/signup', (req, res) => {
-  const sql = "INSERT INTO uzytkownik (`imie`,`nazwisko`,`data_urodzenia`,`plec`,`email`,`haslo`) VALUES (?);"
+  const sql = "INSERT INTO uzytkownik (`email`, `haslo`, `imie`, `nazwisko`, `data_urodzenia`, `plec`, `typ_konta`) VALUES (?, ?, ?, ?, ?, ?, 'manager');";
   const values = [
+    req.body.email,
+    req.body.haslo,
     req.body.imie,
     req.body.nazwisko,
     req.body.data,
     req.body.plec,
-    req.body.email,
-    req.body.haslo
-  ]
+  ];
   console.log("SQL Query:", sql);
   console.log(values);                //! W razie debugowania
   console.log(req.body);
   
-  db.query(sql, [values], (err,data) => {
+  db.query(sql, values, (err,data) => {
     if (err) {
       return res.json("Error");
     }

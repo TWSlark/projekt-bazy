@@ -33,7 +33,7 @@ function Signup() {
         {
             axios.post('http://localhost:5000/signup', values)
             .then(res => {
-                navigate('/login')
+                navigate('/')
             })
             .catch(err => console.log(err))
         }
