@@ -1,5 +1,5 @@
 @import url(https://fonts.googleapis.com/css?family=Inter:100,200,300,regular,500,600,700,800,900);
-body
+.signupBody
 {
     margin: 0;
     padding: 0;
@@ -26,7 +26,7 @@ body
     align-items: center;
     padding: 2rem 4rem;
     border-radius: 16px;
-    gap: 3vh;
+    gap: 1vh;
 }
  .form input
 {
@@ -39,6 +39,7 @@ body
     outline: none;
     border:none;
     caret-color: #5030E5;
+    margin: 0;
 }
 .plec 
 {
@@ -123,4 +124,10 @@ a
     color: #5030E5;
     text-transform: uppercase;
 
+}
+p
+{
+    margin: 0;
+    padding: 0;
+    color: #af0303;
 }

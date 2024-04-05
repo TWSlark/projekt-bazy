@@ -41,26 +41,26 @@ function Signup() {
 
 
   return (
-    <div>
+    <div className='signupBody'>
     <div>
         <form className='form' action="" onSubmit={handleSubmit}>
             <h1 className='header'>Rejestracja</h1>
             <div className="imie">
                 {/* <label htmlFor="imie">Imie</label> */}
                 <input type="text" placeholder="Imie" name='imie' onChange={handleInput}/>
-                {errors.imie && <span> {errors.imie}</span>}
+                {errors.imie && <p> {errors.imie}</p>}
             </div>
 
             <div className="nazwisko">
                 {/* <label htmlFor="nazwisko">Nazwisko</label> */}
                 <input type="text" placeholder="Nazwisko" name='nazwisko' onChange={handleInput}/>
-                {errors.nazwisko && <span> {errors.nazwisko}</span>}
+                {errors.nazwisko && <p> {errors.nazwisko}</p>}
             </div>
 
             <div className="data">
                 {/* <label htmlFor="data">Data urodzenia</label> */}
                 <input type="date" placeholder="Data urodzenia" name='data' onChange={handleInput}/>
-                {errors.data && <span> {errors.data}</span>}
+                {errors.data && <p> {errors.data}</p>}
             </div>
 
             <div className="plec">
@@ -73,20 +73,20 @@ function Signup() {
                     <input type="radio" name="plec" value="2" onChange={handleInput} />
                     Kobieta
                     </div>
-                {errors.plec && <span> {errors.plec}</span>}
                 
             </div>
+                {errors.plec && <p> {errors.plec}</p>}
 
             <div className="email">
                 {/* <label htmlFor="email">Email</label> */}
                 <input type="text" placeholder="Email" name="email" onChange={handleInput}/>
-                {errors.email && <span> {errors.email}</span>}
+                {errors.email && <p> {errors.email}</p>}
             </div>
 
             <div className="haslo">
                 {/* <label htmlFor="haslo">HasĹo</label> */}
                 <input type="password" placeholder="Hasło" name="haslo" onChange={handleInput}/>
-                {errors.haslo && <span> {errors.haslo}</span>}
+                {errors.haslo && <p> {errors.haslo}</p>}
             </div>
 
             <div className="buttons">

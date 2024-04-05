@@ -28,7 +28,7 @@ function Login() {
                 if (res.data === "Git") {
                     navigate('/home')
                 } else {
-                    alert("Nie istnieje konto o podanych poświadczeniach");
+                    alert("Nie istnieje konto o podanych poświadczeniach"); //Można usunąć w sumie
                 }
             })
             .catch(err => console.log(err))
@@ -36,20 +36,18 @@ function Login() {
     };
     
     return (
-        <div>
+        <div className='loginBody'>
         <div>
             <form className='form1' action="" onSubmit={handleSubmit}>
                 <h1 className='header'>Zaloguj</h1>
                 <div className="email">
-                    {/* <label htmlFor="email">Login</label> */}
                     <input type="text" placeholder="Email" name='email' onChange={handleInput}/>
-                    {errors.email && <span> {errors.email}</span>}
+                    {errors.email && <p> {errors.email}</p>}
                 </div>
     
                 <div className="haslo">
-                    {/* <label htmlFor="haslo">HasĹo</label> */}
                     <input type="password" placeholder="Hasło" name='haslo' onChange={handleInput}/>
-                    {errors.password && <span> {errors.password}</span>}
+                    {errors.password && <p> {errors.password}</p>}
                 </div>
     
                 <div className="buttons">
