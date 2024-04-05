@@ -1,22 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import "./App.css";
+import React from 'react';
+import Login from './Login';
+import Signup from './Signup';
+import {BrowserRouter, Routes, Route} from 'react-router-dom';
 
-function App() {
-
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    fetch('http://localhost:5000/')
-      .then(response => response.text())
-      .then(data => setData(data))
-      .catch(error => console.error('Error fetching data:', error));
-  }, []);
-
+function App() { 
   return (
-    <div>
-      <h1>Server Data:</h1>
-      <p>{data || 'No data yet'}</p>
-    </div>
+    <BrowserRouter>
+    <Routes>
+      <Route path='/' element={<Login />}></Route>
+      <Route path='/signup' element={<Signup />}></Route>
+    </Routes>
+    </BrowserRouter>
   );
 }
 
