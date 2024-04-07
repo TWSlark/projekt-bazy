@@ -16,7 +16,7 @@ function Login() {
     const [errors, setErrors] = useState({})
     
     const handleInput = (e) => {
-        setValues(prev => ({...prev, [e.target.name]: [e.target.value]}));
+        setValues(prev => ({...prev, [e.target.name]: e.target.value}));
     };
 
     const handleSubmit = (e) =>{
@@ -43,13 +43,13 @@ function Login() {
                     <div className="email">
                         {/* <label htmlFor="email">Login</label> */}
                         <input type="text" placeholder="Email" name='email' onChange={handleInput}/>
-                        {errors.email && <span> {errors.email}</span>}
+                        {errors.email && <p> {errors.email}</p>}
                     </div>
         
                     <div className="haslo">
                         {/* <label htmlFor="haslo">HasĹo</label> */}
                         <input type="password" placeholder="Hasło" name='haslo' onChange={handleInput}/>
-                        {errors.password && <span> {errors.password}</span>}
+                        {errors.password && <p> {errors.password}</p>}
                     </div>
         
                     <div className="buttons">
