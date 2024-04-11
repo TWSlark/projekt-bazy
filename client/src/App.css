@@ -1,0 +1,88 @@
+.logo {
+    display: flex;
+    align-items: center;
+    height: 64px;
+    background: #fff;
+    border-bottom: 1px solid #e2dddd;
+    border-right: 1px solid #e2dddd;
+    padding: 0 24px;
+  }
+  
+.app-name {
+    color: #000000;
+    font-weight: 500;
+    font-size: 18px;
+}
+
+.header {
+    background: #fff;
+    border-bottom: 1px solid #e2dddd;
+    padding: 0;
+}
+  
+.sider {
+    overflow: auto;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    border-right: 1px solid #e2dddd;
+}
+
+.content {
+    background: #fff;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.contentTop {
+    background: #f3f3f3;
+    padding: 10px;
+    font-size: large;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.contentBottom {
+    background: #f3f3f3;
+    padding: 10px;
+    font-size: large;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 10px;
+    flex-grow: 1;
+}
+
+.progressBox {
+    background: #d4d4d4;
+    padding-bottom: 30px;
+    margin: 10px;
+    font-size: large;
+    border-radius: 10px;
+    width: 250px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+.ant-layout-sider {
+    background: #fff;
+}
+  
+.site-layout .site-layout-background {
+    background: #fff;
+}
+  
+.site-layout .site-layout-background {
+    background: #fff;
+}
+
+.ant-menu {
+    height: 93.2%;
+}
