@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const salt = 10;
 
@@ -70,7 +71,8 @@ app.post('/login', (req, res) => {
           return res.json("Błąd");
         }
         if (result) {
-          return res.json("Git")
+          const token = jwt.sign({ email: req.body.email }, 'your-secret-key', { expiresIn: '10s' });
+          return res.json({ token });
         } else {
           return res.json("Nie git")
         }

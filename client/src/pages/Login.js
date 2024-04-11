@@ -25,8 +25,11 @@ function Login() {
         
             axios.post('http://localhost:5000/login', values)
             .then(res => {
-                if (res.data === "Git") {
-                    navigate('/pulpit')
+                if (res.data.token) {
+                    localStorage.setItem('token', res.data.token);
+                    const tokenExpiration = new Date().getTime() + 10000; // 10 seconds in milliseconds
+                    localStorage.setItem('tokenExpiration', tokenExpiration);
+                    navigate('/pulpit');
                 } else {
                     alert("Nie istnieje konto o podanych poświadczeniach");
                 }

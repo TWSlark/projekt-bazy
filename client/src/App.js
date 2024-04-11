@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 
 import Pulpit from './pages/Pulpit';
 import Kalendarz from './pages/Kalendarz';
@@ -15,6 +15,23 @@ import Signup from './pages/Signup';
 const { Header, Content, Sider } = Layout;
 
 const App = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/');
+    } else {
+      const tokenExpiration = localStorage.getItem('tokenExpiration');
+      const currentTime = new Date().getTime();
+      if (currentTime > parseInt(tokenExpiration)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenExpiration');
+        navigate('/');
+      }
+    }
+  }, [navigate]);
+
   return (
       <Routes>
         <Route path="/" element={<Login />} />
