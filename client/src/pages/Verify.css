@@ -1,0 +1,28 @@
+@import url(https://fonts.googleapis.com/css?family=Inter:100,200,300,regular,500,600,700,800,900);
+.verify-container
+{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background: linear-gradient(to top, #3300ff77, #3300ff70), url("bg.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Inter;  
+    background-color: #1a1a1a;
+}
+
+.main
+{
+    width: 20vw;
+    text-align: center;
+    text-wrap: balance;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    text-transform: uppercase;
+}
