@@ -27,7 +27,7 @@ function Login() {
             .then(res => {
                 if (res.data.token) {
                     localStorage.setItem('token', res.data.token);
-                    const tokenExpiration = new Date().getTime() + 10000; // 10 seconds in milliseconds
+                    const tokenExpiration = new Date().getTime() + 1000000;
                     localStorage.setItem('tokenExpiration', tokenExpiration);
                     navigate('/pulpit');
                 } else {

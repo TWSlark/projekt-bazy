@@ -19,9 +19,11 @@ const App = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) {
+    const currentPath = window.location.pathname;
+    
+    if (currentPath !== '/signup' && !token) {
       navigate('/');
-    } else {
+    } else if (token) {
       const tokenExpiration = localStorage.getItem('tokenExpiration');
       const currentTime = new Date().getTime();
       if (currentTime > parseInt(tokenExpiration)) {

@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -9,6 +10,7 @@ const salt = 10;
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json());
 
 const db = mysql.createConnection({
   host: "localhost",
@@ -20,7 +22,7 @@ const db = mysql.createConnection({
 })
 
 app.post('/signup', (req, res) => {
-  const sql = "INSERT INTO uzytkownik (`email`, `haslo`, `imie`, `nazwisko`, `data_urodzenia`, `plec`, `typ_konta`) VALUES (?, ?, ?, ?, ?, ?, 'manager');";
+  const sql = "INSERT INTO uzytkownik (`email`, `haslo`, `imie`, `nazwisko`, `data_urodzenia`, `plec`, `typ_konta`) VALUES (?, ?, ?, ?, ?, ?, ?)";
   const password = req.body.haslo;
   bcrypt.hash(password.toString(), salt, (err,hash) =>{
     if (err) {
@@ -33,6 +35,7 @@ app.post('/signup', (req, res) => {
       req.body.nazwisko,
       req.body.data,
       req.body.plec,
+      'manager'
     ];
     console.log("SQL Query:", sql);
     console.log(values);                //! W razie debugowania
@@ -82,6 +85,13 @@ app.post('/login', (req, res) => {
 
 app.get('/projects', (req, res) => {
   db.query('SELECT * FROM projekty', (error, results, fields) => {
+    if (error) throw error;
+    res.json(results);
+  });
+});
+
+app.get('/tasks', (req, res) => {
+  db.query('SELECT * FROM zadania', (error, results, fields) => {
     if (error) throw error;
     res.json(results);
   });
