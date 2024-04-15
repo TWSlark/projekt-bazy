@@ -11,6 +11,7 @@ import Czlonkowie from './pages/Czlonkowie';
 import Ustawienia from './pages/Ustawienia';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Verify from './pages/Verify';
 
 const { Header, Content, Sider } = Layout;
 
@@ -38,6 +39,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/verify" element={<Verify />} />
         <Route element={<MainLayout />}>
           <Route path="/pulpit" element={<Pulpit />} />
           <Route path="/kalendarz" element={<Kalendarz />} />
