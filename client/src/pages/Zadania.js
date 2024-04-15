@@ -66,7 +66,7 @@ const Zadania = () => {
 
     return (
       <div ref={drop} className="drag-container" data-status={status}>
-        <div className={status.toLowerCase()}>{status}</div>
+        <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
           <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} status={task.status} />
         ))}
@@ -81,7 +81,7 @@ const Zadania = () => {
       </div>
       <div className='contentBottom'>
         <DndProvider backend={HTML5Backend}>
-          <Container status="DoZrobienia" />
+          <Container status="Do zrobienia" />
           <Container status="Trwajace" />
           <Container status="Zrobione" />
         </DndProvider>
