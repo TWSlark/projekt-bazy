@@ -87,38 +87,51 @@ db.connect((err) => {
 app.post('/login', (req, res) => {
   const sql = process.env.SQL_LOGIN_QUERY;
 
-  db.query(sql, [req.body.email], (err,data) => {
+  db.query(sql, [req.body.email], (err, data) => {
     console.log(data[0]);
     if (err) {
       return res.json("Error");
     }
     if (data.length > 0) {
-      bcrypt.compare(req.body.haslo.toString(),data[0].haslo,(err,result)=>{
-        if (err) {
-          return res.json("Błąd");
-        }
-        if (result) {
-          const token = jwt.sign({ email: req.body.email }, 'your-secret-key', { expiresIn: '5m' });
-          return res.json({ token });
-        } else {
-          return res.json("Nie git")
-        }
-      })
-  }}) 
+      if (data[0].active === 1) {
+        bcrypt.compare(req.body.haslo.toString(), data[0].haslo, (err, result) => {
+          if (err) {
+            return res.json("Błąd");
+          }
+          if (result) {
+            const token = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '5m' });
+            return res.json({ token });
+          } else {
+            return res.json("Nie ma takich poswiadczen");
+          }
+        });
+      } else {
+        return res.json("Konto nieaktywne");
+      }
+    }
+  });
 });
-
 
 app.get('/verify', (req, res) => {
   const { token } = req.query;
   
-  jwt.verify(token, tokenKey, (err) => {
+  jwt.verify(token, tokenKey, (err, decoded) => {
     if (err) {
       return res.json({ error: "Weryfikacja nieudana" });
     } else {
-      return res.redirect('http://localhost:3000/')
+      const email = decoded.email;
+      const updateSql = "UPDATE uzytkownik SET active = 1 WHERE email = ?";
+
+      db.query(updateSql, [email], (updateErr, updateResult) => {
+        if (updateErr) {
+          return res.json({ error: "Błąd aktualizacji konta" });
+        } else {
+          return res.redirect('http://localhost:3000/');
+        }
+      });
     }
-    });
   });
+});
 
 
 app.get('/projects', (req, res) => {

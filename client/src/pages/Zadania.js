@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-const Task = ({ id, title, status, onMoveTask }) => {
+const Task = ({ id, title, description, status, onMoveTask }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -13,7 +13,8 @@ const Task = ({ id, title, status, onMoveTask }) => {
 
   return (
     <div className="task" ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
-      {title}
+      <h3>{title}</h3>
+      <p>{description}</p>
     </div>
   );
 };
@@ -68,7 +69,7 @@ const Zadania = () => {
       <div ref={drop} className="drag-container" data-status={status}>
         <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
-          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} status={task.status} />
+          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} />
         ))}
       </div>
     );

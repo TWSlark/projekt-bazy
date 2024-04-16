@@ -22,7 +22,7 @@ const App = () => {
     const token = localStorage.getItem('token');
     const currentPath = window.location.pathname;
     
-    if (currentPath !== '/signup' && !token) {
+    if (currentPath !== '/signup' && currentPath !== '/verify' && !token) {
       navigate('/');
     } else if (token) {
       const tokenExpiration = localStorage.getItem('tokenExpiration');

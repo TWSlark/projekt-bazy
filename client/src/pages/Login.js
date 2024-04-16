@@ -31,7 +31,9 @@ function Login() {
                     localStorage.setItem('tokenExpiration', tokenExpiration);
                     navigate('/pulpit');
                 } else {
-                    alert("Nie istnieje konto o podanych poświadczeniach");
+                    if (res.data === "Konto nieaktywne" || res.data === "Nie ma takich poswiadczen") {
+                        alert("Konto nieaktywne lub nie ma takich poswiadczen");
+                    }
                 }
             })
             .catch(err => console.log(err))
