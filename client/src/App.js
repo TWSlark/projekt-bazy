@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
@@ -17,9 +17,9 @@ const { Header, Content, Sider } = Layout;
 
 const App = () => {
   const navigate = useNavigate();
+  const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken'));
 
   useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken');
     const currentPath = window.location.pathname;
     
     if (currentPath !== '/signup' && currentPath !== '/verify' && !accessToken) {
@@ -28,12 +28,44 @@ const App = () => {
       const tokenExpiration = localStorage.getItem('tokenExpiration');
       const currentTime = new Date().getTime();
       if (currentTime > parseInt(tokenExpiration)) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('tokenExpiration');
-        navigate('/');
+        refreshAccessToken();
       }
     }
-  }, [navigate]);
+  }, [accessToken, navigate]);
+
+  const refreshAccessToken = () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      navigate('/');
+      return;
+    }
+
+    fetch('http://localhost:5000/refresh-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to refresh access token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        const newAccessToken = data.accessToken;
+        localStorage.setItem('accessToken', newAccessToken);
+        const tokenExpiration = new Date().getTime() + 150000;
+        localStorage.setItem('tokenExpiration', tokenExpiration);
+        console.log('Odświeżono accessToken');
+        setAccessToken(newAccessToken);
+      })
+      .catch(error => {
+        console.error('Nieodswieżono accessToken:', error);
+        navigate('/');
+      });
+  };
 
   return (
       <Routes>
@@ -75,9 +107,6 @@ const items = [
 
 const MainLayout = () => {
 
-  const onClick = (e) => {
-    console.log('click ', e);
-  };
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={256} className="sider">
@@ -86,7 +115,6 @@ const MainLayout = () => {
           <span className="app-name">Taskify</span>
         </div>
         <Menu
-          onClick={onClick}
           defaultSelectedKeys={['1']}
           defaultOpenKeys={['sub1']}
           mode="inline"

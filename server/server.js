@@ -108,7 +108,7 @@ app.post('/login', (req, res) => {
               if (updateErr) {
                 return res.json({ error: "Błąd zapisu refreshToken w bazie danych" });
               }
-              return res.json({accessToken});
+              return res.json({ accessToken, refreshToken });
             });
           } else {
             return res.json("Nie ma takich poswiadczen");
@@ -142,6 +142,22 @@ app.get('/verify', (req, res) => {
   });
 });
 
+const verifyAccessToken = (req, res, next) => {
+  const accessToken = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+  if (!accessToken) {
+    return res.status(401).json({ error: 'Brak accessToken' });
+  }
+
+  jwt.verify(accessToken, tokenKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Nieprawidłowy accessToken' });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 app.post('/refresh-token', (req, res) => {
   const { refreshToken } = req.body;
 
@@ -171,22 +187,6 @@ app.post('/refresh-token', (req, res) => {
     });
   });
 });
-
-const verifyAccessToken = (req, res, next) => {
-  const accessToken = req.headers.authorization && req.headers.authorization.split(' ')[1];
-
-  if (!accessToken) {
-    return res.status(401).json({ error: 'Brak accessToken' });
-  }
-
-  jwt.verify(accessToken, tokenKey, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ error: 'Nieprawidłowy accessToken' });
-    }
-    req.user = decoded;
-    next();
-  });
-};
 
 app.get('/projects', verifyAccessToken, (req, res) => {
   db.query('SELECT * FROM projekty', (error, results, fields) => {
