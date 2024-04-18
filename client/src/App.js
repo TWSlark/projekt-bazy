@@ -19,16 +19,16 @@ const App = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const accessToken = localStorage.getItem('accessToken');
     const currentPath = window.location.pathname;
     
-    if (currentPath !== '/signup' && currentPath !== '/verify' && !token) {
+    if (currentPath !== '/signup' && currentPath !== '/verify' && !accessToken) {
       navigate('/');
-    } else if (token) {
+    } else if (accessToken) {
       const tokenExpiration = localStorage.getItem('tokenExpiration');
       const currentTime = new Date().getTime();
       if (currentTime > parseInt(tokenExpiration)) {
-        localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
         localStorage.removeItem('tokenExpiration');
         navigate('/');
       }

@@ -101,8 +101,15 @@ app.post('/login', (req, res) => {
             return res.json("Błąd");
           }
           if (result) {
-            const token = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '5m' });
-            return res.json({ token });
+            const refreshToken = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '1h' });
+            const accessToken = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '5m' });
+            const updateRefreshToken = "UPDATE uzytkownik SET refreshToken = ? WHERE email = ?";
+            db.query(updateRefreshToken, [refreshToken, req.body.email], (updateErr, updateResult) => {
+              if (updateErr) {
+                return res.json({ error: "Błąd zapisu refreshToken w bazie danych" });
+              }
+              return res.json({accessToken});
+            });
           } else {
             return res.json("Nie ma takich poswiadczen");
           }
@@ -135,22 +142,67 @@ app.get('/verify', (req, res) => {
   });
 });
 
+app.post('/refresh-token', (req, res) => {
+  const { refreshToken } = req.body;
 
-app.get('/projects', (req, res) => {
+  if (!refreshToken) {
+    return res.status(401).json({ error: 'Brak refreshToken' });
+  }
+
+  jwt.verify(refreshToken, tokenKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Nieprawidłowy refreshToken' });
+    }
+
+    const email = decoded.email;
+
+    const checkRefreshToken = "SELECT * FROM uzytkownik WHERE email = ? AND refreshToken = ?";
+    db.query(checkRefreshToken, [email, refreshToken], (checkErr, checkResult) => {
+      if (checkErr) {
+        return res.status(500).json({ error: 'Problem z bazą - refreshToken' });
+      }
+
+      if (checkResult.length === 0) {
+        return res.status(403).json({ error: 'Nieprawidłowy refreshToken' });
+      }
+
+      const newAccessToken = jwt.sign({ email: email }, tokenKey, { expiresIn: '5m' });
+      return res.json({ accessToken: newAccessToken });
+    });
+  });
+});
+
+const verifyAccessToken = (req, res, next) => {
+  const accessToken = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+  if (!accessToken) {
+    return res.status(401).json({ error: 'Brak accessToken' });
+  }
+
+  jwt.verify(accessToken, tokenKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Nieprawidłowy accessToken' });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
+app.get('/projects', verifyAccessToken, (req, res) => {
   db.query('SELECT * FROM projekty', (error, results, fields) => {
     if (error) throw error;
     res.json(results);
   });
 });
 
-app.get('/tasks', (req, res) => {
+app.get('/tasks', verifyAccessToken, (req, res) => {
   db.query('SELECT * FROM zadania', (error, results, fields) => {
     if (error) throw error;
     res.json(results);
   });
 });
 
-app.put('/tasks/:taskId', (req, res) => {
+app.put('/tasks/:taskId', verifyAccessToken, (req, res) => {
   const { taskId } = req.params;
   const { status } = req.body;
 

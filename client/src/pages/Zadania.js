@@ -28,7 +28,14 @@ const Zadania = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('http://localhost:5000/tasks');
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch('http://localhost:5000/tasks', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+
       const data = await response.json();
       setTasks(data);
     } catch (error) {
@@ -38,9 +45,12 @@ const Zadania = () => {
 
   const moveTask = async (taskId, newStatus) => {
     try {
+      const accessToken = localStorage.getItem('accessToken');
+
       await fetch(`http://localhost:5000/tasks/${taskId}`, {
         method: 'PUT',
         headers: {
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: newStatus }),

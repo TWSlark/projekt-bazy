@@ -25,8 +25,8 @@ function Login() {
         
             axios.post('http://localhost:5000/login', values)
             .then(res => {
-                if (res.data.token) {
-                    localStorage.setItem('token', res.data.token);
+                if (res.data.accessToken) {
+                    localStorage.setItem('accessToken', res.data.accessToken);
                     const tokenExpiration = new Date().getTime() + 300000;
                     localStorage.setItem('tokenExpiration', tokenExpiration);
                     navigate('/pulpit');
