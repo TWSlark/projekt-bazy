@@ -24,7 +24,7 @@ const App = () => {
     
     if (currentPath !== '/signup' && currentPath !== '/verify' && !accessToken) {
       navigate('/');
-    } else if (accessToken) {
+    } else if (accessToken && currentPath !== '/signup' && currentPath !== '/verify') {
       const tokenExpiration = localStorage.getItem('tokenExpiration');
       const currentTime = new Date().getTime();
       if (currentTime > parseInt(tokenExpiration)) {
