@@ -2,7 +2,6 @@ import { UserOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import { Avatar, Tooltip, Row, Col, Progress } from 'antd';
 
-
 const Pulpit = () => {
   const [projects, setProjects] = useState([]);
 
@@ -11,16 +10,31 @@ const Pulpit = () => {
   }, []);
 
   const fetchProjects = async () => {
-    const response = await fetch('http://localhost:5000/projects');
-    const data = await response.json();
-    setProjects(data);
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+  
+      const response = await fetch('http://localhost:5000/projects', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error('Nie udało się pobrać projektów');
+      }
+  
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error("Bład przy pobieraniu projektow" ,error);
+    }
   };
 
   return (
     <div className='content'>
       <div className='contentTop'>
         <h1>Pulpit</h1>
-        <Row justify="end">
+        <Row justify="end"> 
           <Col>
             <Avatar.Group>
               <Tooltip title="Ant User" placement="top">

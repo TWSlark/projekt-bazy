@@ -25,10 +25,16 @@ function Login() {
         
             axios.post('http://localhost:5000/login', values)
             .then(res => {
-                if (res.data === "Git") {
-                    navigate('/pulpit')
+                if (res.data.accessToken) {
+                    localStorage.setItem('accessToken', res.data.accessToken);
+                    localStorage.setItem('refreshToken', res.data.refreshToken);
+                    const tokenExpiration = new Date().getTime() + 150000;
+                    localStorage.setItem('tokenExpiration', tokenExpiration);
+                    navigate('/pulpit');
                 } else {
-                    alert("Nie istnieje konto o podanych poświadczeniach");
+                    if (res.data === "Konto nieaktywne" || res.data === "Nie ma takich poswiadczen") {
+                        alert("Konto nieaktywne lub nie ma takich poswiadczen");
+                    }
                 }
             })
             .catch(err => console.log(err))

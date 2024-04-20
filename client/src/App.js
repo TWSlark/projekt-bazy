@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 
 import Pulpit from './pages/Pulpit';
 import Kalendarz from './pages/Kalendarz';
@@ -16,6 +16,57 @@ import Verify from './pages/Verify';
 const { Header, Content, Sider } = Layout;
 
 const App = () => {
+  const navigate = useNavigate();
+  const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken'));
+
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    
+    if (currentPath !== '/signup' && currentPath !== '/verify' && !accessToken) {
+      navigate('/');
+    } else if (accessToken && currentPath !== '/signup' && currentPath !== '/verify') {
+      const tokenExpiration = localStorage.getItem('tokenExpiration');
+      const currentTime = new Date().getTime();
+      if (currentTime > parseInt(tokenExpiration)) {
+        refreshAccessToken();
+      }
+    }
+  }, [accessToken, navigate]);
+
+  const refreshAccessToken = () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      navigate('/');
+      return;
+    }
+
+    fetch('http://localhost:5000/refresh-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to refresh access token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        const newAccessToken = data.accessToken;
+        localStorage.setItem('accessToken', newAccessToken);
+        const tokenExpiration = new Date().getTime() + 150000;
+        localStorage.setItem('tokenExpiration', tokenExpiration);
+        console.log('Odświeżono accessToken');
+        setAccessToken(newAccessToken);
+      })
+      .catch(error => {
+        console.error('Nieodswieżono accessToken:', error);
+        navigate('/');
+      });
+  };
+
   return (
       <Routes>
         <Route path="/" element={<Login />} />
@@ -56,9 +107,6 @@ const items = [
 
 const MainLayout = () => {
 
-  const onClick = (e) => {
-    console.log('click ', e);
-  };
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={256} className="sider">
@@ -67,7 +115,6 @@ const MainLayout = () => {
           <span className="app-name">Taskify</span>
         </div>
         <Menu
-          onClick={onClick}
           defaultSelectedKeys={['1']}
           defaultOpenKeys={['sub1']}
           mode="inline"

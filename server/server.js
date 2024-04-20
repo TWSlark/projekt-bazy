@@ -5,13 +5,15 @@ const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger-output.json');
 
 const tokenKey = process.env.TOKENKEY;
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 let transport = nodemailer.createTransport({
   host: process.env.HOSTMT,
@@ -87,43 +89,132 @@ db.connect((err) => {
 app.post('/login', (req, res) => {
   const sql = process.env.SQL_LOGIN_QUERY;
 
-  db.query(sql, [req.body.email], (err,data) => {
+  db.query(sql, [req.body.email], (err, data) => {
     console.log(data[0]);
     if (err) {
       return res.json("Error");
     }
     if (data.length > 0) {
-      bcrypt.compare(req.body.haslo.toString(),data[0].haslo,(err,result)=>{
-        if (err) {
-          return res.json("Błąd");
-        }
-        if (result) {
-          return res.json("Git")
-        } else {
-          return res.json("Nie git")
-        }
-      })
-  }}) 
+      if (data[0].active === 1) {
+        bcrypt.compare(req.body.haslo.toString(), data[0].haslo, (err, result) => {
+          if (err) {
+            return res.json("Błąd");
+          }
+          if (result) {
+            const refreshToken = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '1h' });
+            const accessToken = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '5m' });
+            const updateRefreshToken = "UPDATE uzytkownik SET refreshToken = ? WHERE email = ?";
+            db.query(updateRefreshToken, [refreshToken, req.body.email], (updateErr, updateResult) => {
+              if (updateErr) {
+                return res.json({ error: "Błąd zapisu refreshToken w bazie danych" });
+              }
+              return res.json({ accessToken, refreshToken });
+            });
+          } else {
+            return res.json("Nie ma takich poswiadczen");
+          }
+        });
+      } else {
+        return res.json("Konto nieaktywne");
+      }
+    }
+  });
 });
-
 
 app.get('/verify', (req, res) => {
   const { token } = req.query;
   
-  jwt.verify(token, tokenKey, (err) => {
+  jwt.verify(token, tokenKey, (err, decoded) => {
     if (err) {
       return res.json({ error: "Weryfikacja nieudana" });
     } else {
-      return res.redirect('http://localhost:3000/')
+      const email = decoded.email;
+      const updateSql = "UPDATE uzytkownik SET active = 1 WHERE email = ?";
+
+      db.query(updateSql, [email], (updateErr, updateResult) => {
+        if (updateErr) {
+          return res.json({ error: "Błąd aktualizacji konta" });
+        } else {
+          return res.redirect('http://localhost:3000/');
+        }
+      });
     }
+  });
+});
+
+const verifyAccessToken = (req, res, next) => {
+  const accessToken = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+  if (!accessToken) {
+    return res.status(401).json({ error: 'Brak accessToken' });
+  }
+
+  jwt.verify(accessToken, tokenKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Nieprawidłowy accessToken' });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
+app.post('/refresh-token', (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(401).json({ error: 'Brak refreshToken' });
+  }
+
+  jwt.verify(refreshToken, tokenKey, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Nieprawidłowy refreshToken' });
+    }
+
+    const email = decoded.email;
+
+    const checkRefreshToken = "SELECT * FROM uzytkownik WHERE email = ? AND refreshToken = ?";
+    db.query(checkRefreshToken, [email, refreshToken], (checkErr, checkResult) => {
+      if (checkErr) {
+        return res.status(500).json({ error: 'Problem z bazą - refreshToken' });
+      }
+
+      if (checkResult.length === 0) {
+        return res.status(403).json({ error: 'Nieprawidłowy refreshToken' });
+      }
+
+      const newAccessToken = jwt.sign({ email: email }, tokenKey, { expiresIn: '5m' });
+      return res.json({ accessToken: newAccessToken });
     });
   });
+});
 
-
-app.get('/projects', (req, res) => {
+app.get('/projects', verifyAccessToken, (req, res) => {
   db.query('SELECT * FROM projekty', (error, results, fields) => {
     if (error) throw error;
     res.json(results);
+  });
+});
+
+app.get('/tasks', verifyAccessToken, (req, res) => {
+  db.query('SELECT * FROM zadania', (error, results, fields) => {
+    if (error) throw error;
+    res.json(results);
+  });
+});
+
+app.put('/tasks/:taskId', verifyAccessToken, (req, res) => {
+  const { taskId } = req.params;
+  const { status } = req.body;
+
+  const updateQuery = 'UPDATE zadania SET status = ? WHERE zadanie_id = ?';
+
+  db.query(updateQuery, [status, taskId], (error, results) => {
+    if (error) {
+      console.error('Blad aktualizacji statusu zadania', error);
+      res.status(500).json({ error: 'Internal Server Error z /tasks/:taskID' });
+    } else {
+      res.status(200).json({ message: 'Udana aktualizacja statusu zadania' });
+    }
   });
 });
 
