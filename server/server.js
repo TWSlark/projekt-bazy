@@ -63,11 +63,15 @@ app.post('/signup', (req, res) => {
       req.body.nazwisko,
       req.body.data,
       req.body.plec,
-      hashToken
+      'manager',
+      hashToken,
+      0,
+      null
     ];
     
     db.query(sql, values, (err,data) => {
       if (err) {
+        console.error(err);
         return res.json("Error");
       }
       transport.sendMail({
