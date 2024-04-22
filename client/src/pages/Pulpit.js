@@ -1,9 +1,24 @@
-import { UserOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
-import { Avatar, Tooltip, Row, Col, Progress } from 'antd';
+import { Row, Col, Progress, Modal, Button } from 'antd';
+import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 
 const Pulpit = () => {
   const [projects, setProjects] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    const newProjectTitle = document.querySelector('input[name="title"]').value;
+    createProject(newProjectTitle);
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     fetchProjects();
@@ -30,28 +45,43 @@ const Pulpit = () => {
     }
   };
 
+  const createProject = async (newProjectTitle) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch('http://localhost:5000/projects', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title: newProjectTitle })
+      });
+
+      if (!response.ok) {
+        throw new Error('Nie udało się dodać projektu');
+      }
+
+      fetchProjects();
+    } catch (error) {
+      console.error("Błąd przy dodawaniu projektu:", error);
+    }
+  };
+
   return (
     <div className='content'>
       <div className='contentTop'>
         <h1>Pulpit</h1>
-        <Row justify="end"> 
-          <Col>
-            <Avatar.Group>
-              <Tooltip title="Ant User" placement="top">
-                <Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />} />
-              </Tooltip>
-              <Tooltip title="Ant User" placement="top">
-                <Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />} />
-              </Tooltip>
-              <Tooltip title="Ant User" placement="top">
-                <Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />} />
-              </Tooltip>
-              <Tooltip title="Ant User" placement="top">
-                <Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />} />
-              </Tooltip>
-            </Avatar.Group>
-          </Col>
-        </Row>
+        <Button type="primary" onClick={showModal} icon={<PlusCircleOutlined />}>
+          Dodaj projekt
+        </Button>
+        <Modal title="Dodawanie projektu" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+          <form className='formZadania'>
+            <label>Tytuł:
+              <input type="text" name="title" />
+            </label>
+          </form>
+        </Modal>
       </div>
       <div className='contentBottom'>
         <Row gutter={[16, 16]}>

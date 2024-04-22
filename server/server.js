@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-output.json');
+const { sequelize, Projekty, Uzytkownik } = require('./database.js');
+const Sequelize = require('sequelize');
 
 const tokenKey = process.env.TOKENKEY;
 
@@ -24,7 +26,6 @@ let transport = nodemailer.createTransport({
   }
 });
 
-
 const db = mysql.createConnection({
   host: process.env.HOSTDB,
   user: process.env.USER,
@@ -33,6 +34,14 @@ const db = mysql.createConnection({
   port: process.env.PORTDB,
   authPlugin: 'mysql_native_password'
 })
+
+sequelize.sync({ force: false })
+  .then(() => {
+    console.log('Synchronizacja poprawna, sequelize.');
+  })
+  .catch(err => {
+    console.error('Synchronizacja niepoprawna, sequelize:', err);
+});
 
 app.post('/signup', (req, res) => {
 
@@ -58,6 +67,7 @@ app.post('/signup', (req, res) => {
       req.body.nazwisko,
       req.body.data,
       req.body.plec,
+      "manager",
       token,
       0,
       null
@@ -65,6 +75,7 @@ app.post('/signup', (req, res) => {
     
     db.query(sql, values, (err,data) => {
       if (err) {
+        console.log(err);
         return res.json("Error");
       }
       transport.sendMail({
@@ -195,6 +206,36 @@ app.get('/projects', verifyAccessToken, (req, res) => {
     if (error) throw error;
     res.json(results);
   });
+});
+
+app.post('/projects', async (req, res) => {
+  try {
+    const { title } = req.body;
+    const authHeader = req.headers.authorization;
+
+    let userEmail = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring('Bearer '.length);
+      const decoded = jwt.verify(token, tokenKey);
+      userEmail = decoded.email;
+    }
+
+    const newProject = await Projekty.create({ tytul: title });
+
+    if (userEmail) {
+      const user = await Uzytkownik.findOne({ where: { email: userEmail } });
+      if (user) {
+        await newProject.addUzytkownik(user);
+      } else {
+        console.error('Nie znaleziono uzytkownika');
+      }
+    }
+
+    res.status(201).json(newProject);
+  } catch (error) {
+    console.error('Nie stworzono projektu:', error);
+    res.status(500).json({ error: 'Nie stworzono projektu' });
+  }
 });
 
 app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
