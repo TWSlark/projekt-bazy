@@ -225,7 +225,7 @@ app.post('/projects', async (req, res) => {
     if (userEmail) {
       const user = await Uzytkownik.findOne({ where: { email: userEmail } });
       if (user) {
-        await newProject.addUzytkownik(user);
+        await user.addProjekty(newProject);
       } else {
         console.error('Nie znaleziono uzytkownika');
       }
