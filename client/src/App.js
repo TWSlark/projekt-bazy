@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined, BookOutlined } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom';
 
 import Pulpit from './pages/Pulpit';
 import Kalendarz from './pages/Kalendarz';
 import Zadania from './pages/Zadania';
 import Czlonkowie from './pages/Czlonkowie';
 import Ustawienia from './pages/Ustawienia';
+import Projekt from './pages/Projekt';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Verify from './pages/Verify';
@@ -78,34 +79,63 @@ const App = () => {
           <Route path="/zadania" element={<Zadania />} />
           <Route path="/czlonkowie" element={<Czlonkowie />} />
           <Route path="/ustawienia" element={<Ustawienia />} />
+          <Route path="/projekt/:projectId" element={<Projekt />} />
         </Route>
       </Routes>
   );
 };
 
-function getItem(label, key, icon, children, type) {
-  return {
-    key,
-    icon,
-    children,
-    label,
-    type,
-  };
-}
-
-const items = [
-  getItem(<Link to="/pulpit">Pulpit</Link>, '1', <AppstoreOutlined />),
-  getItem(<Link to="/kalendarz">Kalendarz</Link>, '2', <CalendarOutlined />),
-  getItem(<Link to="/zadania">Zadania</Link>, '3', <CalculatorOutlined />),
-  getItem(<Link to="/czlonkowie">Członkowie</Link>, '4', <UserOutlined />),
-  getItem(<Link to="/ustawienia">Ustawienia</Link>, '5', <SettingOutlined />),
-  { type: 'divider' },
-  getItem('Moje projekty', 'grp', null, [
-    getItem('Projekt 1', '11'), getItem('Projekt 2', '12')
-  ], 'group'),
-];
-
 const MainLayout = () => {
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+  
+      const response = await fetch('http://localhost:5000/projects', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error('Nie udało się pobrać projektów');
+      }
+  
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error("Bład przy pobieraniu projektow" ,error);
+    }
+  };
+
+  function getItem(label, key, icon, children, type) {
+    return {
+      key,
+      icon,
+      children,
+      label,
+      type,
+    };
+  }
+  
+  const projectItems = projects.map((project, index) => (
+    getItem(<Link to={`/projekt/${project.projekt_id}`}>{project.tytul}</Link>, `project-${index}`, <BookOutlined/>)
+  ));
+  
+  const items = [
+    getItem(<Link to="/pulpit">Pulpit</Link>, '1', <AppstoreOutlined />),
+    getItem(<Link to="/kalendarz">Kalendarz</Link>, '2', <CalendarOutlined />),
+    getItem(<Link to="/zadania">Zadania</Link>, '3', <CalculatorOutlined />),
+    getItem(<Link to="/czlonkowie">Członkowie</Link>, '4', <UserOutlined />),
+    getItem(<Link to="/ustawienia">Ustawienia</Link>, '5', <SettingOutlined />),
+    { type: 'divider' },
+    getItem('Moje projekty', 'grp', null, projectItems, 'group'),
+  ];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -124,13 +154,7 @@ const MainLayout = () => {
       <Layout className="site-layout">
         <Header className="header" />
           <Content className="content">
-            <Routes>
-              <Route path="/pulpit" element={<Pulpit />} />
-              <Route path="/kalendarz" element={<Kalendarz />} />
-              <Route path="/zadania" element={<Zadania />} />
-              <Route path="/czlonkowie" element={<Czlonkowie />} />
-              <Route path="/ustawienia" element={<Ustawienia />} />
-            </Routes>
+            <Outlet />
           </Content>
       </Layout>
     </Layout>

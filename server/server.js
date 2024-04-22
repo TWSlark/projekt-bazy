@@ -58,7 +58,9 @@ app.post('/signup', (req, res) => {
       req.body.nazwisko,
       req.body.data,
       req.body.plec,
-      token
+      token,
+      0,
+      null
     ];
     
     db.query(sql, values, (err,data) => {
@@ -195,8 +197,10 @@ app.get('/projects', verifyAccessToken, (req, res) => {
   });
 });
 
-app.get('/tasks', verifyAccessToken, (req, res) => {
-  db.query('SELECT * FROM zadania', (error, results, fields) => {
+app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
+  const { projectId } = req.params;
+
+  db.query('SELECT * FROM zadania WHERE projekt_id = ?', [projectId], (error, results, fields) => {
     if (error) throw error;
     res.json(results);
   });
