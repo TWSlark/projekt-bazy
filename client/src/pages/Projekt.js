@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams } from 'react-router-dom';
+import { PlusCircleOutlined } from '@ant-design/icons';
+import { Modal, Button } from 'antd';
 
 const Task = ({ id, title, description, status, onMoveTask }) => {
   const [{ isDragging }, drag] = useDrag({
@@ -23,6 +25,25 @@ const Task = ({ id, title, description, status, onMoveTask }) => {
 const Projekt = () => {
   const { projectId } = useParams();
   const [tasks, setTasks] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+  const handleOk = () => {
+    const title = document.querySelector('input[name="title"]').value;
+    const description = document.querySelector('input[name="description"]').value;
+    const status = document.querySelector('select[name="status"]').value;
+    const priority = document.querySelector('select[name="priority"]').value;
+    const deadline = document.querySelector('input[name="deadline"]').value;
+
+    createTask({ title, description, status, priority, deadline });
+
+    setIsModalOpen(false);
+  };
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     fetchTasks();
@@ -64,6 +85,25 @@ const Projekt = () => {
     }
   };
 
+  const createTask = async ({ title, description, status, priority, deadline }) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      await fetch(`http://localhost:5000/tasks/${projectId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nazwa: title, opis: description, status, priorytet: priority, termin: deadline }),
+      });
+
+      fetchTasks();
+    } catch (error) {
+      console.error('Blad przy tworzeniu zadania', error);
+    }
+  };
+
   const handleDrop = (taskId, newStatus) => {
     moveTask(taskId, newStatus);
   };
@@ -91,6 +131,41 @@ const Projekt = () => {
     <div className='content'>
       <div className='contentTop'>
         <h1>Zadania</h1>
+        <Button type="primary" onClick={showModal} icon={<PlusCircleOutlined />}>
+          Dodaj zadanie
+        </Button>
+        <Modal title="Dodawanie zadania" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+          <form className='formZadania'>
+            <label>
+              Tytuł:
+              <input type="text" name="title" />
+            </label>
+            <label>
+              Opis:
+              <input type="text" name="description" />
+            </label>
+            <label>
+              Status:
+              <select name="status">
+                <option value="Do zrobienia">Do zrobienia</option>
+                <option value="Trwajace">Trwajace</option>
+                <option value="Zrobione">Zrobione</option>
+              </select>
+            </label>
+            <label>
+              Priorytet:
+              <select name="priority">
+                <option value="Niski">Niski</option>
+                <option value="Sredni">Średni</option>
+                <option value="Wysoki">Wysoki</option>
+              </select>
+            </label>
+            <label>
+              Termin:
+              <input type="date" name="deadline" />
+            </label>
+          </form>
+        </Modal>
       </div>
       <div className='contentBottom'>
         <DndProvider backend={HTML5Backend}>

@@ -222,6 +222,22 @@ app.put('/tasks/:taskId', verifyAccessToken, (req, res) => {
   });
 });
 
+app.post('/tasks/:projectId', verifyAccessToken, (req, res) => {
+  const { projectId } = req.params;
+  const { nazwa, opis, status, priorytet, termin } = req.body;
+
+  const insertQuery = 'INSERT INTO zadania (tytul, opis, status, priorytet, do_kiedy, data_utworzenia, projekt_id) VALUES (?, ?, ?, ?, ?, NOW(), ?)';
+
+  db.query(insertQuery, [nazwa, opis, status, priorytet, termin, projectId], (error, results) => {
+    if (error) {
+      console.error('Blad dodawania zadania', error);
+      res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
+    } else {
+      res.status(200).json({ message: 'Udane dodanie zadania' });
+    }
+  });
+});
+
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
 });
