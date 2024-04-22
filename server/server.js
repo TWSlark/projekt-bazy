@@ -238,6 +238,21 @@ app.post('/tasks/:projectId', verifyAccessToken, (req, res) => {
   });
 });
 
+app.delete('/tasks/:taskId', verifyAccessToken, (req, res) => {
+  const { taskId } = req.params;
+
+  const deleteQuery = 'DELETE FROM zadania WHERE zadanie_id = ?';
+
+  db.query(deleteQuery, [taskId], (error, results) => {
+    if (error) {
+      console.error('Blad usuwania zadania', error);
+      res.status(500).json({ error: 'Internal Server Error z /tasks/:taskId' });
+    } else {
+      res.status(200).json({ message: 'Udane usuniecie zadania' });
+    }
+  });
+});
+
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
 });

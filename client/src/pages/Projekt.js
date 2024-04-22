@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams } from 'react-router-dom';
-import { PlusCircleOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Modal, Button } from 'antd';
 
-const Task = ({ id, title, description, status, onMoveTask }) => {
+const Task = ({ id, title, description, status, onMoveTask, onDeleteTask }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -14,10 +14,31 @@ const Task = ({ id, title, description, status, onMoveTask }) => {
     }),
   });
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    onDeleteTask(id);
+    setIsModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
   return (
     <div className="task" ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
       <h3>{title}</h3>
       <p>{description}</p>
+      <Button type="primary" onClick={showModal} icon={<MinusCircleOutlined />}>
+        Usuń
+      </Button>
+      <Modal title="Usuwanie zadania" open={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+        <p>Czy na pewno chcesz usunąć to zadanie?</p>
+      </Modal>
     </div>
   );
 };
@@ -30,6 +51,7 @@ const Projekt = () => {
   const showModal = () => {
     setIsModalOpen(true);
   };
+
   const handleOk = () => {
     const title = document.querySelector('input[name="title"]').value;
     const description = document.querySelector('input[name="description"]').value;
@@ -41,6 +63,7 @@ const Projekt = () => {
 
     setIsModalOpen(false);
   };
+
   const handleCancel = () => {
     setIsModalOpen(false);
   };
@@ -104,6 +127,23 @@ const Projekt = () => {
     }
   };
 
+  const deleteTask = async (taskId) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      await fetch(`http://localhost:5000/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      fetchTasks();
+    } catch (error) {
+      console.error('Blad przy usuwaniu zadania', error);
+    }
+  };
+
   const handleDrop = (taskId, newStatus) => {
     moveTask(taskId, newStatus);
   };
@@ -121,7 +161,7 @@ const Projekt = () => {
       <div ref={drop} className="drag-container" data-status={status}>
         <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
-          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} />
+          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} onDeleteTask={deleteTask} />
         ))}
       </div>
     );
