@@ -72,6 +72,7 @@ app.post('/signup', (req, res) => {
       req.body.nazwisko,
       req.body.data,
       req.body.plec,
+      "manager",
       hashToken,
       0,
       null
@@ -79,6 +80,7 @@ app.post('/signup', (req, res) => {
     
     db.query(sql, values, (err,data) => {
       if (err) {
+        console.log(err);
         return res.json("Error");
       }
       transport.sendMail({
