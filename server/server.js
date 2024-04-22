@@ -60,6 +60,11 @@ app.post('/signup', (req, res) => {
     }
     const token = jwt.sign({email: req.body.email},tokenKey,{ expiresIn: '30min' });
 
+    bcrypt.hash(token, salt, (err,hashToken) =>{
+      if (err) {
+        console.log(err);
+      }
+
     const values = [
       req.body.email,
       hash,
@@ -67,27 +72,26 @@ app.post('/signup', (req, res) => {
       req.body.nazwisko,
       req.body.data,
       req.body.plec,
-      "manager",
-      token,
+      hashToken,
       0,
       null
     ];
     
     db.query(sql, values, (err,data) => {
       if (err) {
-        console.log(err);
         return res.json("Error");
       }
       transport.sendMail({
         from: 'noreply@taskify',
         to: req.body.email,
         subject: "Taskify: Weryfikacja konta",
-        html: `Kliknij w link aby dokończyć weryfikację konta: <a href="http://localhost:5000/verify?token=${token}">Zweryfikuj konto</a>`
+        html: `Kliknij w link aby dokończyć weryfikację konta: <a href="http://localhost:5000/verify?hashToken=${hashToken}">Zweryfikuj konto</a>`
       });
       return res.json(data);
     })
   })
-  });
+  })
+});
 });
 
 db.connect((err) => {
@@ -97,6 +101,7 @@ db.connect((err) => {
   }
   console.log('Połączenie z bazą danych zostało ustanowione');
 });
+
 
 
 app.post('/login', (req, res) => {
@@ -135,24 +140,34 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/verify', (req, res) => {
-  const { token } = req.query;
-  
-  jwt.verify(token, tokenKey, (err, decoded) => {
+  const { hashToken } = req.query;
+  console.log(hashToken);
+  const searchSql = "SELECT * FROM uzytkownik WHERE `token` = ?"
+
+  db.query(searchSql,[hashToken], (err,result)=>{
     if (err) {
-      return res.json({ error: "Weryfikacja nieudana" });
-    } else {
-      const email = decoded.email;
+      return res.json({ error: "Błąd szukania użytkownika" });
+    }
+    console.log(result[0])
+
+    if (result.length>0) {
+
+      const user = result[0];
+
+      if (user.token === hashToken) {
+        
       const updateSql = "UPDATE uzytkownik SET active = 1 WHERE email = ?";
 
-      db.query(updateSql, [email], (updateErr, updateResult) => {
+      db.query(updateSql, [user.email], (updateErr, updateResult) => {
         if (updateErr) {
           return res.json({ error: "Błąd aktualizacji konta" });
         } else {
           return res.redirect('http://localhost:3000/');
         }
       });
+      }
     }
-  });
+  })
 });
 
 const verifyAccessToken = (req, res, next) => {

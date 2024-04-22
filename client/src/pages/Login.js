@@ -28,7 +28,7 @@ function Login() {
                 if (res.data.accessToken) {
                     localStorage.setItem('accessToken', res.data.accessToken);
                     localStorage.setItem('refreshToken', res.data.refreshToken);
-                    const tokenExpiration = new Date().getTime() + 150000;
+                    const tokenExpiration = new Date().getTime() + 300000;
                     localStorage.setItem('tokenExpiration', tokenExpiration);
                     navigate('/pulpit');
                 } else {

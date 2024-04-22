@@ -57,7 +57,7 @@ const App = () => {
       .then(data => {
         const newAccessToken = data.accessToken;
         localStorage.setItem('accessToken', newAccessToken);
-        const tokenExpiration = new Date().getTime() + 150000;
+        const tokenExpiration = new Date().getTime() + 300000;
         localStorage.setItem('tokenExpiration', tokenExpiration);
         console.log('Odświeżono accessToken');
         setAccessToken(newAccessToken);
