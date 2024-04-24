@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-output.json');
-const { sequelize, Projekty, Uzytkownik } = require('./database.js');
+const { sequelize, Projekty, Uzytkownik, Zadania } = require('./database.js');
 const Sequelize = require('sequelize');
 
 const tokenKey = process.env.TOKENKEY;
@@ -309,6 +309,17 @@ app.delete('/tasks/:taskId', verifyAccessToken, (req, res) => {
       res.status(200).json({ message: 'Udane usuniecie zadania' });
     }
   });
+});
+
+app.get('/kalendarz', verifyAccessToken, (req, res) => {
+  Zadania.findAll()
+    .then((zadania) => {
+      res.json(zadania);
+    })
+    .catch((error) => {
+      console.error('Nie pobrano dat do kalendarza', error);
+      res.status(500).json({ error: 'Internal Server Error z /kalendarz' });
+    });
 });
 
 app.listen(5000, () => {

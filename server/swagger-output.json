@@ -82,7 +82,7 @@
         "description": "",
         "parameters": [
           {
-            "name": "token",
+            "name": "hashToken",
             "in": "query",
             "type": "string"
           }
