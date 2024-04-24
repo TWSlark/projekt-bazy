@@ -218,6 +218,20 @@ app.post('/refresh-token', (req, res) => {
   });
 });
 
+app.post('/logout',verifyAccessToken, (req, res) => {
+
+  const sql = "UPDATE uzytkownik SET refreshToken = NULL WHERE email = ?"
+
+  db.query(sql,[req.user.email], (err,result)=>{
+    if (err) {
+      console.error('Błąd usuwania refreshToken:', error);
+      return res.status(500).json({ error: 'Błąd serwera podczas wylogowywania' });
+    }
+    res.status(200).json({ message: 'Jest git' });
+  })
+});
+
+
 app.get('/projects', verifyAccessToken, (req, res) => {
   db.query('SELECT * FROM projekty', (error, results, fields) => {
     if (error) throw error;
@@ -327,8 +341,8 @@ app.listen(5000, () => {
 });
 
 
-//! ALTER TABLE uzytkownik AUTO_INCREMENT = 1; resetowanie auto increment
+//* ALTER TABLE uzytkownik AUTO_INCREMENT = 1; resetowanie auto increment
 
-//     console.log("SQL Query:", sql);
-//     console.log(values);                //! W razie debugowania
-//     console.log(req.body);
+
+//TODO Dodać reload po utworzeniu projektu
+//TODO Dodać reszte zapytań do .env

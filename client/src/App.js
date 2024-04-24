@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined, BookOutlined } from '@ant-design/icons';
-import { Layout, Menu } from 'antd';
+import { Layout, Menu, Button } from 'antd';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom';
 
 import Pulpit from './pages/Pulpit';
@@ -20,6 +20,26 @@ const App = () => {
   const navigate = useNavigate();
   const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken'));
 
+  const handleLogout = () =>{
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+
+    fetch('http://localhost:5000/logout', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .then(data =>{
+        console.log(data.message);
+        navigate('/');
+      })
+      .catch(err => {
+        console.error(err);
+      })
+    };
   useEffect(() => {
     const currentPath = window.location.pathname;
     
@@ -73,7 +93,7 @@ const App = () => {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify" element={<Verify />} />
-        <Route element={<MainLayout />}>
+        <Route element={<MainLayout onLogout={handleLogout} />}>
           <Route path="/pulpit" element={<Pulpit />} />
           <Route path="/kalendarz" element={<Kalendarz />} />
           <Route path="/zadania" element={<Zadania />} />
@@ -85,7 +105,7 @@ const App = () => {
   );
 };
 
-const MainLayout = () => {
+const MainLayout = ({onLogout}) => {
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
@@ -137,6 +157,10 @@ const MainLayout = () => {
     getItem('Moje projekty', 'grp', null, projectItems, 'group'),
   ];
 
+  const handleLogoutclick = () =>{
+    onLogout()
+  }
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={256} className="sider">
@@ -152,7 +176,11 @@ const MainLayout = () => {
         />
       </Sider>
       <Layout className="site-layout">
-        <Header className="header" />
+        <Header className="header" >
+        <Button type="primary" onClick={handleLogoutclick}>
+          Wyloguj
+        </Button>
+          </Header>
           <Content className="content">
             <Outlet />
           </Content>
