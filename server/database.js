@@ -30,6 +30,7 @@ const Zadania = ZadaniaModel(sequelize, Sequelize);
 Uzytkownik.belongsToMany(Projekty, { through: ProjektyUzytkownik, foreignKey: 'uzytkownik_id' });
 Projekty.belongsToMany(Uzytkownik, { through: ProjektyUzytkownik, foreignKey: 'projekt_id' });
 Projekty.hasMany(Zadania, { foreignKey: 'projekt_id' });
+Zadania.belongsTo(Projekty, { foreignKey: 'projekt_id' });
 
 module.exports = {
   sequelize,

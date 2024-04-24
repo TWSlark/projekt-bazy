@@ -251,26 +251,25 @@ app.get('/projects', verifyAccessToken, async (req, res) => {
     }
 
     if (!userEmail) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Brak tokena' });
     }
 
     const user = await Uzytkownik.findOne({ where: { email: userEmail } });
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Nie znaleziono uzytkownika' });
     }
 
     const projects = await Projekty.findAll({
       include: {
         model: Uzytkownik,
         where: { uzytkownik_id: user.uzytkownik_id },
-        through: { attributes: [] }
       }
     });
 
     res.json(projects);
   } catch (error) {
-    console.error('Error fetching projects:', error);
-    res.status(500).json({ error: 'Error fetching projects' });
+    console.error('Internal server error z /projects', error);
+    res.status(500).json({ error: 'Internal server error z /projects' });
   }
 });
 
@@ -360,15 +359,45 @@ app.delete('/tasks/:taskId', verifyAccessToken, (req, res) => {
   });
 });
 
-app.get('/kalendarz', verifyAccessToken, (req, res) => {
-  Zadania.findAll()
-    .then((zadania) => {
-      res.json(zadania);
-    })
-    .catch((error) => {
-      console.error('Nie pobrano dat do kalendarza', error);
-      res.status(500).json({ error: 'Internal Server Error z /kalendarz' });
+app.get('/kalendarz', verifyAccessToken, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    let userEmail = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring('Bearer '.length);
+      const decoded = jwt.verify(token, tokenKey);
+      userEmail = decoded.email;
+    }
+
+    if (!userEmail) {
+      return res.status(401).json({ error: 'Brak tokena' });
+    }
+
+    const user = await Uzytkownik.findOne({ where: { email: userEmail } });
+    if (!user) {
+      return res.status(404).json({ error: 'Nie znaleziono uzytkownika' });
+    }
+
+    const projects = await Projekty.findAll({
+      include: {
+        model: Uzytkownik,
+        where: { uzytkownik_id: user.uzytkownik_id },
+        through: { attributes: [] }
+      }
     });
+
+    const projectIds = projects.map(project => project.projekt_id);
+
+    const tasks = await Zadania.findAll({
+      where: { projekt_id: projectIds }
+    });
+
+    res.json(tasks);
+  } catch (error) {
+    console.error('Internal server error z /kalendarz', error);
+    res.status(500).json({ error: 'Internal server error z /kalendarz' });
+  }
 });
 
 app.listen(5000, () => {
