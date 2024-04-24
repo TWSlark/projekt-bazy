@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import valid from './LoginValid';
 import axios from 'axios';
 import './Login.css';
 
 function Login() {
+
+    useEffect(() => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+    }, []);
 
     const [values, setValues] = useState({
         email:'',

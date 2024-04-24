@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-output.json');
-const { sequelize, Projekty, Uzytkownik, Zadania } = require('./database.js');
+const { sequelize, Projekty, Uzytkownik, Zadania, ProjektyUzytkownik } = require('./database.js');
 const Sequelize = require('sequelize');
 
 const tokenKey = process.env.TOKENKEY;
@@ -218,11 +218,19 @@ app.post('/refresh-token', (req, res) => {
   });
 });
 
-app.post('/logout',verifyAccessToken, (req, res) => {
+app.post('/logout', (req, res) => {
+  const authHeader = req.headers.authorization;
+
+    let userEmail = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring('Bearer '.length);
+      const decoded = jwt.verify(token, tokenKey);
+      userEmail = decoded.email;
+    }
 
   const sql = "UPDATE uzytkownik SET refreshToken = NULL WHERE email = ?"
 
-  db.query(sql,[req.user.email], (err,result)=>{
+  db.query(sql,[userEmail], (err,result)=>{
     if (err) {
       console.error('Błąd usuwania refreshToken:', error);
       return res.status(500).json({ error: 'Błąd serwera podczas wylogowywania' });
@@ -231,12 +239,39 @@ app.post('/logout',verifyAccessToken, (req, res) => {
   })
 });
 
+app.get('/projects', verifyAccessToken, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-app.get('/projects', verifyAccessToken, (req, res) => {
-  db.query('SELECT * FROM projekty', (error, results, fields) => {
-    if (error) throw error;
-    res.json(results);
-  });
+    let userEmail = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring('Bearer '.length);
+      const decoded = jwt.verify(token, tokenKey);
+      userEmail = decoded.email;
+    }
+
+    if (!userEmail) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const user = await Uzytkownik.findOne({ where: { email: userEmail } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const projects = await Projekty.findAll({
+      include: {
+        model: Uzytkownik,
+        where: { uzytkownik_id: user.uzytkownik_id },
+        through: { attributes: [] }
+      }
+    });
+
+    res.json(projects);
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    res.status(500).json({ error: 'Error fetching projects' });
+  }
 });
 
 app.post('/projects', async (req, res) => {

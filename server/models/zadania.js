@@ -47,9 +47,5 @@ module.exports = (sequelize, DataTypes) => {
         subQuery: false
     });
 
-    Zadania.associate = (models) => {
-        Zadania.belongsTo(models.Projekty, { foreignKey: 'projekt_id' });
-    };
-
     return Zadania;
 };

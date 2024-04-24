@@ -1,3 +1,5 @@
+const { ProjektyUzytkownik } = require("../database");
+
 module.exports = (sequelize, DataTypes) => {
     const Uzytkownik = sequelize.define('uzytkownik', {
       uzytkownik_id: {
@@ -54,7 +56,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Uzytkownik.associate = (models) => {
-        Uzytkownik.belongsToMany(models.Projekty, { through: 'projekty_uzytkownik', foreignKey: 'uzytkownik_id' });
+      Uzytkownik.belongsToMany(models.Projekty, { through: models.ProjektyUzytkownik, foreignKey: 'uzytkownik_id' });
     };
 
     return Uzytkownik;

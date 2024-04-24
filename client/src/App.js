@@ -4,6 +4,7 @@ import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, 
 import { Layout, Menu, Button } from 'antd';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom';
 
+import ProtectedRoute from './ProtectedRoute';
 import Pulpit from './pages/Pulpit';
 import Kalendarz from './pages/Kalendarz';
 import Zadania from './pages/Zadania';
@@ -17,42 +18,62 @@ import Verify from './pages/Verify';
 const { Header, Content, Sider } = Layout;
 
 const App = () => {
+  return (
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/verify" element={<Verify />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/pulpit" element={<Pulpit />} />
+            <Route path="/kalendarz" element={<Kalendarz />} />
+            <Route path="/zadania" element={<Zadania />} />
+            <Route path="/czlonkowie" element={<Czlonkowie />} />
+            <Route path="/ustawienia" element={<Ustawienia />} />
+            <Route path="/projekt/:projectId" element={<Projekt />} />
+          </Route>
+        </Route>
+      </Routes>
+  );
+};
+
+const MainLayout = () => {
+  const [projects, setProjects] = useState([]);
   const navigate = useNavigate();
   const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken'));
 
-  const handleLogout = () =>{
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-
-    fetch('http://localhost:5000/logout', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(response => response.json())
-      .then(data =>{
-        console.log(data.message);
-        navigate('/');
-      })
-      .catch(err => {
-        console.error(err);
-      })
-    };
   useEffect(() => {
-    const currentPath = window.location.pathname;
-    
-    if (currentPath !== '/signup' && currentPath !== '/verify' && !accessToken) {
-      navigate('/');
-    } else if (accessToken && currentPath !== '/signup' && currentPath !== '/verify') {
-      const tokenExpiration = localStorage.getItem('tokenExpiration');
-      const currentTime = new Date().getTime();
-      if (currentTime > parseInt(tokenExpiration)) {
-        refreshAccessToken();
-      }
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    const tokenExpiration = localStorage.getItem('tokenExpiration');
+    const currentTime = new Date().getTime();
+    if (currentTime > parseInt(tokenExpiration)) {
+      refreshAccessToken();
     }
-  }, [accessToken, navigate]);
+  }, [accessToken, navigate, window.location.pathname]);
+
+  const fetchProjects = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+  
+      const response = await fetch('http://localhost:5000/projects', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error('Nie udało się pobrać projektów');
+      }
+  
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error("Bład przy pobieraniu projektow" ,error);
+    }
+  };
 
   const refreshAccessToken = () => {
     const refreshToken = localStorage.getItem('refreshToken');
@@ -88,50 +109,28 @@ const App = () => {
       });
   };
 
-  return (
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/verify" element={<Verify />} />
-        <Route element={<MainLayout onLogout={handleLogout} />}>
-          <Route path="/pulpit" element={<Pulpit />} />
-          <Route path="/kalendarz" element={<Kalendarz />} />
-          <Route path="/zadania" element={<Zadania />} />
-          <Route path="/czlonkowie" element={<Czlonkowie />} />
-          <Route path="/ustawienia" element={<Ustawienia />} />
-          <Route path="/projekt/:projectId" element={<Projekt />} />
-        </Route>
-      </Routes>
-  );
-};
+  const handleLogout = () =>{
 
-const MainLayout = ({onLogout}) => {
-  const [projects, setProjects] = useState([]);
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-  
-      const response = await fetch('http://localhost:5000/projects', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-  
-      if (!response.ok) {
-        throw new Error('Nie udało się pobrać projektów');
+    fetch('http://localhost:5000/logout', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
       }
-  
-      const data = await response.json();
-      setProjects(data);
-    } catch (error) {
-      console.error("Bład przy pobieraniu projektow" ,error);
-    }
-  };
+    })
+      .then(response => response.json())
+      .then(data =>{
+        console.log(data.message);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        navigate('/');
+      })
+      .catch(err => {
+        console.error(err);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      })
+    };
 
   function getItem(label, key, icon, children, type) {
     return {
@@ -157,10 +156,6 @@ const MainLayout = ({onLogout}) => {
     getItem('Moje projekty', 'grp', null, projectItems, 'group'),
   ];
 
-  const handleLogoutclick = () =>{
-    onLogout()
-  }
-
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={256} className="sider">
@@ -177,7 +172,7 @@ const MainLayout = ({onLogout}) => {
       </Sider>
       <Layout className="site-layout">
         <Header className="header" >
-        <Button type="primary" onClick={handleLogoutclick}>
+        <Button type="primary" onClick={handleLogout}>
           Wyloguj
         </Button>
           </Header>
