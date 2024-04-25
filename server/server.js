@@ -400,6 +400,21 @@ app.get('/kalendarz', verifyAccessToken, async (req, res) => {
   }
 });
 
+app.get('/members', (req, res) => {
+
+  const membersQuery = 'SELECT concat(imie," ",nazwisko) imienazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik;';
+
+  db.query(membersQuery, (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania użytkowników z bazy danych', error);
+      res.status(500).json({ error: 'Błąd pobierania użytkowników z bazy danych' });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
 });
