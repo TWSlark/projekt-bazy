@@ -37,14 +37,14 @@
 }
 
 .contentTop {
-    background: #f3f3f3;
-    padding: 10px;
+    /* background: #f3f3f3; */
+    padding-inline: 20px;
     font-size: large;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-radius: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
 }
 
 .contentBottom {
@@ -227,4 +227,19 @@
 .czl-imie:last-child
 {
     border-bottom: 2px solid #8BC48A;
+}
+.contentTop-left
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+}
+.contentTop-left h1
+{
+    margin: 0;
+}
+.contentTop-left button
+{
+    width: 7rem;
 }

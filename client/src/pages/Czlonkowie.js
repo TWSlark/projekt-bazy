@@ -1,5 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import axios from 'axios';
+import { SortAscendingOutlined, DownOutlined, SortDescendingOutlined, 
+  ArrowDownOutlined, ArrowUpOutlined, AlignLeftOutlined } from '@ant-design/icons';
+import { Button, Dropdown,  Space  } from 'antd';
 
 const Czlonkowie = () => {
 
@@ -10,12 +13,95 @@ const Czlonkowie = () => {
     .then(res => setPeople(res.data))
     .catch(err => console.error("Błąd pobierania użytkowników: ",err));
   },[])
-  console.log(people);
+
+  console.table(people);
+
+  const handleMenuClick = (e) => {
+    let sortedPeople = [...people];
+    switch (e.key){
+      case '1': 
+      sortedPeople.sort((a,b) => a.imienazw.localeCompare(b.imienazw));
+      break;
+
+      case '2': 
+      sortedPeople.sort((a,b) => b.imienazw.localeCompare(a.imienazw));
+      break;
+
+      case '3': 
+      sortedPeople.sort((a,b) => a.status.localeCompare(b.status));
+      break;
+
+      case '4': 
+      sortedPeople.sort((a,b) => b.status.localeCompare(a.status));
+      break;
+
+      case '5': 
+      sortedPeople.sort((a,b) => a.wiek - b.wiek);
+      break;
+
+      case '6': 
+      sortedPeople.sort((a,b) => b.wiek - a.wiek);
+      break;
+
+      default:
+    }
+    setPeople(sortedPeople);
+  };
+
+  const items = [
+    {
+      label: 'Imie A-Z',
+      key: '1',
+      icon: <SortAscendingOutlined />,
+    },
+    {
+      label: 'Imie Z-A',
+      key: '2',
+      icon: <SortDescendingOutlined />,
+    },
+    {
+      label: 'Status A-Z',
+      key: '3',
+      icon: <SortAscendingOutlined />,
+    },
+    {
+      label: 'Status Z-A',
+      key: '4',
+      icon: <SortDescendingOutlined />,
+    },
+    {
+      label: 'Wiek: rosnąco',
+      key: '5',
+      icon: <ArrowUpOutlined />,
+    },
+    {
+      label: 'Wiek: malejąco',
+      key: '6',
+      icon: <ArrowDownOutlined />,
+    },
+  ];
+
+
+  const menuProps = {
+    items,
+    onClick: handleMenuClick,
+  };
+
 
   return (
     <div className='content'>
       <div className='contentTop'>
-        <h1>Czlonkowie</h1>
+        <div className='contentTop-left'>
+          <h1>Czlonkowie</h1>
+          <Dropdown menu={menuProps}>
+            <Button>
+              <Space>
+              <AlignLeftOutlined />Sortuj
+                <DownOutlined />
+              </Space>
+            </Button>
+          </Dropdown>
+        </div>
       </div>
       <div className='contentBottom-czlonkowie'>
         <div className='czlonkowie-header'>
