@@ -52,11 +52,9 @@
     padding: 10px;
     font-size: large;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    justify-content: space-between;
     border-radius: 10px;
     flex-grow: 1;
-    gap: 2rem;
 }
 .contentBottom:first-child
 {
@@ -161,6 +159,18 @@
     margin-top: 20px;
     margin-bottom: 10px;
     width: 95%;
+}
+
+.contentBottom-czlonkowie {
+    background: #f3f3f3;
+    padding: 10px;
+    font-size: large;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 10px;
+    flex-grow: 1;
+    gap: 2rem;
 }
 
 .czlonkowie-container

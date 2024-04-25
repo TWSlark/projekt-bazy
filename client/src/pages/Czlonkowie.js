@@ -17,7 +17,7 @@ const Czlonkowie = () => {
       <div className='contentTop'>
         <h1>Czlonkowie</h1>
       </div>
-      <div className='contentBottom'>
+      <div className='contentBottom-czlonkowie'>
         <div className='czlonkowie-header'>
           <div className='czl-imie'>Imie i nazwisko</div>
           <div className='czl-imie'>Status</div>
