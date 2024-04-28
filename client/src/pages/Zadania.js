@@ -37,19 +37,19 @@ const Zadania = () => {
       break;
 
       case '5': 
-      sortedZadania.sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
-      break;
-
-      case '6': 
-      sortedZadania.sort((a,b) => new Date(b.deadline) - new Date(a.deadline));
-      break;
-
-      case '7': 
       sortedZadania.sort((a,b) => new Date(a.ut) - new Date(b.ut));
       break;
 
-      case '8': 
+      case '6': 
       sortedZadania.sort((a,b) => new Date(b.ut) - new Date(a.ut));
+      break;
+
+      case '7': 
+      sortedZadania.sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
+      break;
+
+      case '8': 
+      sortedZadania.sort((a,b) => new Date(b.deadline) - new Date(a.deadline));
       break;
 
       default:
@@ -79,22 +79,22 @@ const Zadania = () => {
       icon: <SortDescendingOutlined />,
     },
     {
-      label: 'Termin ostateczny: rosnąco',
+      label: 'Data utworzenia: rosnąco',
       key: '5',
       icon: <SortAscendingOutlined />,
     },
     {
-      label: 'Termin ostateczny: malejąco',
+      label: 'Data utworzenia: malejąco',
       key: '6',
       icon: <SortDescendingOutlined />,
     },
     {
-      label: 'Data utworzenia: rosnąco',
+      label: 'Termin ostateczny: rosnąco',
       key: '7',
       icon: <ArrowUpOutlined />,
     },
     {
-      label: 'Data utworzenia: malejąco',
+      label: 'Termin ostateczny: malejącoo',
       key: '8',
       icon: <ArrowDownOutlined />,
     },
@@ -134,8 +134,8 @@ const Zadania = () => {
             <div key={task.id} className='czlonkowie-item'>
               <span>{task.nazwzad}</span> 
               <span>{task.nazwproj}</span> 
-              <span>{task.ut}</span>
-              <span>{task.deadline}</span>
+              <span>{new Date(task.ut).toLocaleDateString()}</span>
+              <span>{new Date(task.deadline).toLocaleDateString()}</span>
             </div>
           ))}
         </div>

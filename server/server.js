@@ -416,7 +416,7 @@ app.get('/members', (req, res) => {
 
 app.get('/zadania', (req, res) => {
 
-  const zadaniaQuery = "SELECT z.tytul nazwzad, p.tytul nazwproj, DATE_FORMAT(z.do_kiedy, '%Y-%m-%d') deadline, DATE_FORMAT(z.data_utworzenia, '%Y-%m-%d') ut FROM zadania z JOIN projekty p ON z.projekt_id = p.projekt_id;";
+  const zadaniaQuery = "SELECT z.tytul nazwzad, p.tytul nazwproj, z.do_kiedy deadline, z.data_utworzenia ut FROM zadania z JOIN projekty p ON z.projekt_id = p.projekt_id;";
 
   db.query(zadaniaQuery, (error, results) => {
     if (error) {
