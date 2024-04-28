@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined, BookOutlined } from '@ant-design/icons';
-import { Layout, Menu, Button } from 'antd';
+import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, SettingOutlined, BuildOutlined, 
+  BookOutlined, DownOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Layout, Menu, Button, Space, Dropdown, Avatar } from 'antd';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom';
 
 import ProtectedRoute from './ProtectedRoute';
@@ -156,6 +157,14 @@ const MainLayout = () => {
     getItem('Moje projekty', 'grp', null, projectItems, 'group'),
   ];
 
+  const menu = (
+    <Menu onClick={handleLogout}>
+        <Menu.Item key="1" icon={<LogoutOutlined />}>
+          Wyloguj
+        </Menu.Item>
+    </Menu>
+  );
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={256} className="sider">
@@ -172,10 +181,15 @@ const MainLayout = () => {
       </Sider>
       <Layout className="site-layout">
         <Header className="header" >
-        <Button type="primary" onClick={handleLogout}>
-          Wyloguj
-        </Button>
-          </Header>
+        <div className='logoutLayout'>
+        <Dropdown overlay={menu}trigger={['click']}>
+          <Space>
+            <Avatar>U</Avatar>
+            <DownOutlined />
+          </Space>
+        </Dropdown>
+        </div>
+        </Header>
           <Content className="content">
             <Outlet />
           </Content>
