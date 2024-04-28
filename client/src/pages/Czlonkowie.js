@@ -20,26 +20,34 @@ const Czlonkowie = () => {
     let sortedPeople = [...people];
     switch (e.key){
       case '1': 
-      sortedPeople.sort((a,b) => a.imienazw.localeCompare(b.imienazw));
+      sortedPeople.sort((a,b) => a.imie.localeCompare(b.imie));
       break;
 
       case '2': 
-      sortedPeople.sort((a,b) => b.imienazw.localeCompare(a.imienazw));
+      sortedPeople.sort((a,b) => b.imie.localeCompare(a.imie));
       break;
 
       case '3': 
-      sortedPeople.sort((a,b) => a.status.localeCompare(b.status));
+      sortedPeople.sort((a,b) => a.nazw.localeCompare(b.nazw));
       break;
 
       case '4': 
-      sortedPeople.sort((a,b) => b.status.localeCompare(a.status));
+      sortedPeople.sort((a,b) => b.nazw.localeCompare(a.nazw));
       break;
 
       case '5': 
-      sortedPeople.sort((a,b) => a.wiek - b.wiek);
+      sortedPeople.sort((a,b) => a.status.localeCompare(b.status));
       break;
 
       case '6': 
+      sortedPeople.sort((a,b) => b.status.localeCompare(a.status));
+      break;
+
+      case '7': 
+      sortedPeople.sort((a,b) => a.wiek - b.wiek);
+      break;
+
+      case '8': 
       sortedPeople.sort((a,b) => b.wiek - a.wiek);
       break;
 
@@ -60,23 +68,33 @@ const Czlonkowie = () => {
       icon: <SortDescendingOutlined />,
     },
     {
-      label: 'Status A-Z',
+      label: 'Nazwisko A-Z',
       key: '3',
       icon: <SortAscendingOutlined />,
     },
     {
-      label: 'Status Z-A',
+      label: 'Nazwisko Z-A',
       key: '4',
       icon: <SortDescendingOutlined />,
     },
     {
-      label: 'Wiek: rosnąco',
+      label: 'Status A-Z',
       key: '5',
+      icon: <SortAscendingOutlined />,
+    },
+    {
+      label: 'Status Z-A',
+      key: '6',
+      icon: <SortDescendingOutlined />,
+    },
+    {
+      label: 'Wiek: rosnąco',
+      key: '7',
       icon: <ArrowUpOutlined />,
     },
     {
       label: 'Wiek: malejąco',
-      key: '6',
+      key: '8',
       icon: <ArrowDownOutlined />,
     },
   ];
@@ -112,7 +130,7 @@ const Czlonkowie = () => {
         <div className='czlonkowie-container'>
           {people.map(member =>(
             <div key={member.id} className='czlonkowie-item'>
-              <span>{member.imienazw}</span> 
+              <span>{member.imie} {member.nazw}</span> 
               <span>{member.status}</span> 
               <span>{member.wiek}</span>
             </div>

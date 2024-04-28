@@ -402,7 +402,7 @@ app.get('/kalendarz', verifyAccessToken, async (req, res) => {
 
 app.get('/members', (req, res) => {
 
-  const membersQuery = 'SELECT concat(imie," ",nazwisko) imienazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik;';
+  const membersQuery = 'SELECT imie, nazwisko nazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik;';
 
   db.query(membersQuery, (error, results) => {
     if (error) {
