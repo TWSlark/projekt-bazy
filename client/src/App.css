@@ -220,6 +220,10 @@
     border-bottom: 2px solid #5030E5;
     padding-bottom: 2px;
 }
+.zadania
+{
+    width: 14rem;  
+}
 .czl-imie:nth-child(2)
 {
     border-bottom: 2px solid #FFA500;

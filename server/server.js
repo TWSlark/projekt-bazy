@@ -414,6 +414,20 @@ app.get('/members', (req, res) => {
   });
 });
 
+app.get('/zadania', (req, res) => {
+
+  const zadaniaQuery = "SELECT z.tytul nazwzad, p.tytul nazwproj, DATE_FORMAT(z.do_kiedy, '%Y-%m-%d') deadline, DATE_FORMAT(z.data_utworzenia, '%Y-%m-%d') ut FROM zadania z JOIN projekty p ON z.projekt_id = p.projekt_id;";
+
+  db.query(zadaniaQuery, (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania zadań z bazy danych', error);
+      res.status(500).json({ error: 'Błąd pobierania zadań z bazy danych' });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
 
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
