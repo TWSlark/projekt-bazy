@@ -428,6 +428,30 @@ app.get('/zadania', (req, res) => {
   });
 });
 
+app.get('/profil', verifyAccessToken, (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+
+  if (!userEmail) {
+    return res.status(401).json({ error: 'Brak tokena' });
+  }
+
+  const sql = "SELECT u.email, u.imie, u.nazwisko, DATE_FORMAT(u.data_urodzenia, '%d-%m-%Y') AS data_urodzenia, u.plec, u.typ_konta, COUNT(pu.projekt_id) AS liczba_projektow " +
+              "FROM uzytkownik u LEFT JOIN projekty_uzytkownik pu ON u.uzytkownik_id = pu.uzytkownik_id WHERE u.email = ? GROUP BY u.uzytkownik_id;";
+
+  db.query(sql, [userEmail], (err, data) => {
+    if (err) {
+      return res.json("Error");
+    }
+    res.json(data[0]);
+  });
+});
 
 app.listen(5000, () => {
     console.log('Server is running on port 5000');

@@ -15,6 +15,7 @@ import Projekt from './pages/Projekt';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Verify from './pages/Verify';
+import Profil from './pages/Profil';
 
 const { Header, Content, Sider } = Layout;
 
@@ -32,6 +33,7 @@ const App = () => {
             <Route path="/czlonkowie" element={<Czlonkowie />} />
             <Route path="/ustawienia" element={<Ustawienia />} />
             <Route path="/projekt/:projectId" element={<Projekt />} />
+            <Route path="/profil" element={<Profil />} />
           </Route>
         </Route>
       </Routes>
@@ -42,9 +44,11 @@ const MainLayout = () => {
   const [projects, setProjects] = useState([]);
   const navigate = useNavigate();
   const [accessToken, setAccessToken] = useState(localStorage.getItem('accessToken'));
+  const [data, setData] = useState({});
 
   useEffect(() => {
     fetchProjects();
+    getProfile();
   }, []);
 
   useEffect(() => {
@@ -110,6 +114,43 @@ const MainLayout = () => {
       });
   };
 
+  const getProfile = async () => {
+    try {
+        const accessToken = localStorage.getItem('accessToken');
+
+        const response = await fetch(`http://localhost:5000/profil`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+        console.log(data);
+        setData(data);
+    } catch (error) {
+        console.error('Blad przy pobieraniu profilu', error);
+    }
+};
+
+const stringToColor = (str) => {
+    let hash = 0;
+    str.split('').forEach(char => {
+        hash = char.charCodeAt(0) + ((hash << 5) - hash)
+    })
+    let color = '#'
+    for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xff
+        color += value.toString(16).padStart(2, '0')
+    }
+    return color
+};
+
+  const handleProfil = () => {
+    navigate('/profil');
+  };
+
   const handleLogout = () =>{
 
     fetch('http://localhost:5000/logout', {
@@ -158,10 +199,13 @@ const MainLayout = () => {
   ];
 
   const menu = (
-    <Menu onClick={handleLogout}>
-        <Menu.Item key="1" icon={<LogoutOutlined />}>
-          Wyloguj
-        </Menu.Item>
+    <Menu>
+      <Menu.Item onClick={handleProfil} key="0" icon={<UserOutlined />}>
+        Profil
+      </Menu.Item>
+      <Menu.Item onClick={handleLogout} key="1" icon={<LogoutOutlined />}>
+        Wyloguj
+      </Menu.Item>
     </Menu>
   );
 
@@ -184,7 +228,7 @@ const MainLayout = () => {
         <div className='logoutLayout'>
         <Dropdown overlay={menu}trigger={['click']}>
           <Space>
-            <Avatar>U</Avatar>
+            <Avatar style={{ backgroundColor: stringToColor(data.imie || ''), fontSize: '12px' }}>{data.imie ? data.imie.charAt(0) : ''}</Avatar>
             <DownOutlined />
           </Space>
         </Dropdown>
