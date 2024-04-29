@@ -254,3 +254,8 @@
 {
     width: 4.6rem;
 }
+
+.project-link {
+    text-decoration: none;
+    color: black;
+}

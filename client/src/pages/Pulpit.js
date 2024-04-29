@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Progress, Modal, Button } from 'antd';
-import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { PlusCircleOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 
 const Pulpit = () => {
   const [projects, setProjects] = useState([]);
@@ -39,7 +40,15 @@ const Pulpit = () => {
       }
   
       const data = await response.json();
-      setProjects(data);
+
+      const progress = data.map(project => {
+        const tasks = project.zadania.length;
+        const doneTasks = project.zadania.filter(task => task.status === 'Zrobione').length;
+        const wynik = Math.round((doneTasks / tasks) * 100);
+        return { ...project, wynik };
+      });
+
+      setProjects(progress);
     } catch (error) {
       console.error("Bład przy pobieraniu projektow" ,error);
     }
@@ -87,10 +96,12 @@ const Pulpit = () => {
         <Row gutter={[16, 16]}>
           {projects.map(project => (
             <Col key={project.projekt_id}>
-              <div className='progressBox'>
-                <h2>{project.tytul}</h2>
-                <Progress type="circle" percent={90} />
-              </div>
+              <Link to={`/projekt/${project.projekt_id}`} className="project-link">
+                <div className='progressBox'>
+                  <h2>{project.tytul}</h2>
+                  <Progress type="circle" percent={project.wynik} />
+                </div>
+              </Link>
             </Col>
           ))}
         </Row>

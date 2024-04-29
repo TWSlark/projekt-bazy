@@ -260,10 +260,14 @@ app.get('/projects', verifyAccessToken, async (req, res) => {
     }
 
     const projects = await Projekty.findAll({
-      include: {
+      include: [{
         model: Uzytkownik,
         where: { uzytkownik_id: user.uzytkownik_id },
-      }
+      },
+      {
+        model: Zadania,
+        attributes: ['zadanie_id', 'status']
+      }]
     });
 
     res.json(projects);
