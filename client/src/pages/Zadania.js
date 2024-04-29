@@ -7,49 +7,77 @@ import { Button, Dropdown,  Space  } from 'antd';
 
 const Zadania = () => {
 
+  // const [zadania, setZadania] = useState([]);
+
+  // useEffect(() => {
+  //   axios.get('http://localhost:5000/zadania')
+  //   .then(res => setZadania(res.data))
+  //   .catch(err => console.error("Błąd pobierania użytkowników: ",err));
+  // },[])
+
   const [zadania, setZadania] = useState([]);
+  const [projekty, setProjekty] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/zadania')
-    .then(res => setZadania(res.data))
-    .catch(err => console.error("Błąd pobierania użytkowników: ",err));
-  },[])
+    fetchZadania();
+  }, []);
+
+  const fetchZadania = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await axios.get(`http://localhost:5000/zadania`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setZadania(response.data.zadania);
+      setProjekty(response.data.projekty)
+
+    } catch (error) {
+      console.error('Blad przy pobieraniu zadań', error);
+    }
+  };
 
   console.table(zadania);
+  console.table(projekty);
 
   const handleMenuClick = (e) => {
     let sortedZadania = [...zadania];
     switch (e.key){
       case '1': 
-      sortedZadania.sort((a,b) => a.nazwzad.localeCompare(b.nazwzad));
+      sortedZadania.sort((a,b) => a.tytul.localeCompare(b.tytul));
       break;
 
       case '2': 
-      sortedZadania.sort((a,b) => b.nazwzad.localeCompare(a.nazwzad));
+      sortedZadania.sort((a,b) => b.tytul.localeCompare(a.tytul));
       break;
 
       case '3': 
-      sortedZadania.sort((a,b) => a.nazwproj.localeCompare(b.nazwproj));
+      sortedZadania.sort((a,b) => a.projekty.tytul.localeCompare(b.projekty.tytul));
       break;
 
       case '4': 
-      sortedZadania.sort((a,b) => b.nazwproj.localeCompare(a.nazwproj));
+      sortedZadania.sort((a,b) => b.projekty.tytul.localeCompare(a.projekty.tytul));
       break;
 
       case '5': 
-      sortedZadania.sort((a,b) => new Date(a.ut) - new Date(b.ut));
+      sortedZadania.sort((a,b) => new Date(a.data_utworzenia) - new Date(b.data_utworzenia));
       break;
 
       case '6': 
-      sortedZadania.sort((a,b) => new Date(b.ut) - new Date(a.ut));
+      sortedZadania.sort((a,b) => new Date(b.data_utworzenia) - new Date(a.data_utworzenia));
       break;
 
       case '7': 
-      sortedZadania.sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
+      sortedZadania.sort((a,b) => new Date(a.do_kiedy) - new Date(b.do_kiedy));
       break;
 
       case '8': 
-      sortedZadania.sort((a,b) => new Date(b.deadline) - new Date(a.deadline));
+      sortedZadania.sort((a,b) => new Date(b.do_kiedy) - new Date(a.do_kiedy));
       break;
 
       default:
@@ -132,10 +160,10 @@ const Zadania = () => {
         <div className='czlonkowie-container'>
           {zadania.map(task =>(
             <div key={task.id} className='czlonkowie-item'>
-              <span>{task.nazwzad}</span> 
-              <span>{task.nazwproj}</span> 
-              <span>{new Date(task.ut).toLocaleDateString()}</span>
-              <span>{new Date(task.deadline).toLocaleDateString()}</span>
+              <span>{task.tytul}</span> 
+              <span>{task.projekty.tytul}</span> 
+              <span>{new Date(task.data_utworzenia).toLocaleDateString()}</span>
+              <span>{new Date(task.do_kiedy).toLocaleDateString()}</span>
             </div>
           ))}
         </div>

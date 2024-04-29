@@ -418,19 +418,49 @@ app.get('/members', (req, res) => {
   });
 });
 
-app.get('/zadania', (req, res) => {
+app.get('/zadania', verifyAccessToken, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-  const zadaniaQuery = "SELECT z.tytul nazwzad, p.tytul nazwproj, z.do_kiedy deadline, z.data_utworzenia ut FROM zadania z JOIN projekty p ON z.projekt_id = p.projekt_id;";
-
-  db.query(zadaniaQuery, (error, results) => {
-    if (error) {
-      console.error('Błąd pobierania zadań z bazy danych', error);
-      res.status(500).json({ error: 'Błąd pobierania zadań z bazy danych' });
-    } else {
-      res.status(200).json(results);
+    let userEmail = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring('Bearer '.length);
+      const decoded = jwt.verify(token, tokenKey);
+      userEmail = decoded.email;
     }
-  });
+
+    if (!userEmail) {
+      return res.status(401).json({ error: 'Brak tokena' });
+    }
+
+    const user = await Uzytkownik.findOne({ where: { email: userEmail } });
+    if (!user) {
+      return res.status(404).json({ error: 'Nie znaleziono uzytkownika' });
+    }
+
+    const projects = await Projekty.findAll({
+      include: {
+        model: Uzytkownik,
+        where: { uzytkownik_id: user.uzytkownik_id },
+        through: { attributes: [] }
+      }
+    });
+
+    const projectIds = projects.map(project => project.projekt_id);
+
+    const tasks = await Zadania.findAll({
+      where: { projekt_id: projectIds },
+      include: Projekty
+    });
+
+    res.json({ zadania: tasks, projekty: projects });
+    
+  } catch (error) {
+    console.error('Internal server error z /zadania', error);
+    res.status(500).json({ error: 'Internal server error z /zadania' });
+  }
 });
+
 
 app.get('/profil', verifyAccessToken, (req, res) => {
   const authHeader = req.headers.authorization;
