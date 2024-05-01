@@ -406,7 +406,12 @@ app.get('/kalendarz', verifyAccessToken, async (req, res) => {
 
 app.get('/members', (req, res) => {
 
-  const membersQuery = 'SELECT imie, nazwisko nazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik;';
+  const {sortCol, sortOrd} = req.query;
+
+  const col = sortCol || 'imie';
+  const order = sortOrd === 'DESC' ? 'DESC' : 'ASC';
+
+  const membersQuery = `SELECT imie, nazwisko nazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik ORDER BY ${col} ${order};`;
 
   db.query(membersQuery, (error, results) => {
     if (error) {

@@ -17,43 +17,21 @@ const Czlonkowie = () => {
   console.table(people);
 
   const handleMenuClick = (e) => {
-    let sortedPeople = [...people];
-    switch (e.key){
-      case '1': 
-      sortedPeople.sort((a,b) => a.imie.localeCompare(b.imie));
-      break;
+    const sortOpt = {
+      '1': {column: 'imie', order: 'ASC'},
+      '2': {column: 'imie', order: 'DESC'},
+      '3': {column: 'nazw', order: 'ASC'},
+      '4': {column: 'nazw', order: 'DESC'},
+      '6': {column: 'status', order: 'DESC'},
+      '5': {column: 'status', order: 'ASC'},
+      '7': {column: 'wiek', order: 'ASC'},
+      '8': {column: 'wiek', order: 'DESC'}
+    };
+    const {column, order} = sortOpt[e.key];
 
-      case '2': 
-      sortedPeople.sort((a,b) => b.imie.localeCompare(a.imie));
-      break;
-
-      case '3': 
-      sortedPeople.sort((a,b) => a.nazw.localeCompare(b.nazw));
-      break;
-
-      case '4': 
-      sortedPeople.sort((a,b) => b.nazw.localeCompare(a.nazw));
-      break;
-
-      case '5': 
-      sortedPeople.sort((a,b) => a.status.localeCompare(b.status));
-      break;
-
-      case '6': 
-      sortedPeople.sort((a,b) => b.status.localeCompare(a.status));
-      break;
-
-      case '7': 
-      sortedPeople.sort((a,b) => a.wiek - b.wiek);
-      break;
-
-      case '8': 
-      sortedPeople.sort((a,b) => b.wiek - a.wiek);
-      break;
-
-      default:
-    }
-    setPeople(sortedPeople);
+    axios.get(`http://localhost:5000/members?sortCol=${column}&sortOrd=${order}`)
+    .then(res => setPeople(res.data))
+    .catch(err => console.error("Błąd pobierania użytkowników: ",err));
   };
 
   const items = [
