@@ -448,9 +448,13 @@ app.get('/zadania', verifyAccessToken, async (req, res) => {
 
     const projectIds = projects.map(project => project.projekt_id);
 
+    const sortCol = req.query.column || 'tytul';
+    const sortOrd = req.query.order || 'ASC';
+
     const tasks = await Zadania.findAll({
       where: { projekt_id: projectIds },
-      include: Projekty
+      include: Projekty,
+      order: [[sortCol,sortOrd]]
     });
 
     res.json({ zadania: tasks, projekty: projects });

@@ -22,12 +22,16 @@ const Zadania = () => {
     fetchZadania();
   }, []);
 
-  const fetchZadania = async () => {
+  const fetchZadania = async (sortParams = {}) => {
+    const accessToken = localStorage.getItem('accessToken');
+    const { column, order } = sortParams;
+   
     try {
-      const accessToken = localStorage.getItem('accessToken');
-
       const response = await axios.get(`http://localhost:5000/zadania`, {
-        method: 'GET',
+        params: {
+          column,
+          order
+        },
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
@@ -35,55 +39,30 @@ const Zadania = () => {
       });
 
       setZadania(response.data.zadania);
-      setProjekty(response.data.projekty)
+      setProjekty(response.data.projekty);
 
     } catch (error) {
-      console.error('Blad przy pobieraniu zadań', error);
+      console.error('Błąd przy pobieraniu zadań', error);
     }
   };
-
+  
   console.table(zadania);
   console.table(projekty);
 
   const handleMenuClick = (e) => {
-    let sortedZadania = [...zadania];
-    switch (e.key){
-      case '1': 
-      sortedZadania.sort((a,b) => a.tytul.localeCompare(b.tytul));
-      break;
-
-      case '2': 
-      sortedZadania.sort((a,b) => b.tytul.localeCompare(a.tytul));
-      break;
-
-      case '3': 
-      sortedZadania.sort((a,b) => a.projekty.tytul.localeCompare(b.projekty.tytul));
-      break;
-
-      case '4': 
-      sortedZadania.sort((a,b) => b.projekty.tytul.localeCompare(a.projekty.tytul));
-      break;
-
-      case '5': 
-      sortedZadania.sort((a,b) => new Date(a.data_utworzenia) - new Date(b.data_utworzenia));
-      break;
-
-      case '6': 
-      sortedZadania.sort((a,b) => new Date(b.data_utworzenia) - new Date(a.data_utworzenia));
-      break;
-
-      case '7': 
-      sortedZadania.sort((a,b) => new Date(a.do_kiedy) - new Date(b.do_kiedy));
-      break;
-
-      case '8': 
-      sortedZadania.sort((a,b) => new Date(b.do_kiedy) - new Date(a.do_kiedy));
-      break;
-
-      default:
+    const sortOpt = {
+      '1': {column: 'tytul', order: 'ASC'},
+      '2': {column: 'tytul', order: 'DESC'},
+      '3': {column: 'projekty.tytul', order: 'ASC'},
+      '4': {column: 'projekty.tytul', order: 'DESC'},
+      '5': {column: 'data_utworzenia', order: 'ASC'},
+      '6': {column: 'data_utworzenia', order: 'DESC'},
+      '7': {column: 'do_kiedy', order: 'ASC'},
+      '8': {column: 'do_kiedy', order: 'DESC'}
+    };
+    const sortParams = sortOpt[e.key];
+    fetchZadania(sortParams);
     }
-    setZadania(sortedZadania);
-  };
 
   const items = [
     {
