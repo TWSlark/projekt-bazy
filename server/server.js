@@ -316,6 +316,15 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
   });
 });
 
+app.get('/tasks/:projectId/:taskId', verifyAccessToken, (req, res) => {
+  const { projectId, taskId } = req.params;
+
+  db.query('SELECT * FROM zadania WHERE projekt_id = ? AND zadanie_id = ?', [projectId,taskId], (error, results, fields) => {
+    if (error) throw error;
+    res.json(results);
+  });
+});
+
 app.put('/tasks/:taskId', verifyAccessToken, (req, res) => {
   const { taskId } = req.params;
   const { status } = req.body;
