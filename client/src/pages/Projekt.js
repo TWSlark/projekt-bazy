@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Modal, Button } from 'antd';
 
-const Task = ({ id, title, description, status, onMoveTask, onDeleteTask }) => {
+const Task = ({ id, title, description, status, onMoveTask, onDeleteTask,projectId }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -31,7 +31,9 @@ const Task = ({ id, title, description, status, onMoveTask, onDeleteTask }) => {
 
   return (
     <div className="task" ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
-      <h3>{title}</h3>
+      <Link to={`/projekt/${projectId}/zadanie/${id}`}>
+        <h3>{title}</h3>
+      </Link>
       <p>{description}</p>
       <Button type="primary" onClick={showModal} icon={<MinusCircleOutlined />}>
         Usuń
@@ -161,7 +163,7 @@ const Projekt = () => {
       <div ref={drop} className="drag-container" data-status={status}>
         <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
-          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} onDeleteTask={deleteTask} />
+          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} projectId={projectId} onDeleteTask={deleteTask} />
         ))}
       </div>
     );

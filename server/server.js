@@ -316,6 +316,15 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
   });
 });
 
+app.get('/tasks/:projectId/:taskId', verifyAccessToken, (req, res) => {
+  const { projectId, taskId } = req.params;
+
+  db.query('SELECT * FROM zadania WHERE projekt_id = ? AND zadanie_id = ?', [projectId,taskId], (error, results, fields) => {
+    if (error) throw error;
+    res.json(results);
+  });
+});
+
 app.put('/tasks/:taskId', verifyAccessToken, (req, res) => {
   const { taskId } = req.params;
   const { status } = req.body;
@@ -406,7 +415,12 @@ app.get('/kalendarz', verifyAccessToken, async (req, res) => {
 
 app.get('/members', (req, res) => {
 
-  const membersQuery = 'SELECT uzytkownik_id, imie, nazwisko nazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik;';
+  const {sortCol, sortOrd} = req.query;
+
+  const col = sortCol || 'imie';
+  const order = sortOrd === 'DESC' ? 'DESC' : 'ASC';
+
+  const membersQuery = `SELECT uzytkownik_id, imie, nazwisko nazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik ORDER BY ${col} ${order};`;
 
   db.query(membersQuery, (error, results) => {
     if (error) {
@@ -464,9 +478,13 @@ app.get('/zadania', verifyAccessToken, async (req, res) => {
 
     const projectIds = projects.map(project => project.projekt_id);
 
+    const sortCol = req.query.column || 'tytul';
+    const sortOrd = req.query.order || 'ASC';
+
     const tasks = await Zadania.findAll({
       where: { projekt_id: projectIds },
-      include: Projekty
+      include: Projekty,
+      order: [[sortCol,sortOrd]]
     });
 
     res.json({ zadania: tasks, projekty: projects });

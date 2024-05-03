@@ -16,6 +16,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Verify from './pages/Verify';
 import Profil from './pages/Profil';
+import Zadanie from './pages/Zadanie';
 
 const { Header, Content, Sider } = Layout;
 
@@ -33,6 +34,7 @@ const App = () => {
             <Route path="/czlonkowie" element={<Czlonkowie />} />
             <Route path="/ustawienia" element={<Ustawienia />} />
             <Route path="/projekt/:projectId" element={<Projekt />} />
+            <Route path="/projekt/:projectId/zadanie/:taskId" element={<Zadanie/>}/>
             <Route path="/profil" element={<Profil />} />
           </Route>
         </Route>
