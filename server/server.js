@@ -406,7 +406,7 @@ app.get('/kalendarz', verifyAccessToken, async (req, res) => {
 
 app.get('/members', (req, res) => {
 
-  const membersQuery = 'SELECT imie, nazwisko nazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik;';
+  const membersQuery = 'SELECT uzytkownik_id, imie, nazwisko nazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik;';
 
   db.query(membersQuery, (error, results) => {
     if (error) {
@@ -416,6 +416,22 @@ app.get('/members', (req, res) => {
       res.status(200).json(results);
     }
   });
+});
+
+app.post('/assign', (req, res) => {
+  const { userId, projectTytul } = req.body;
+
+  const assignQuery = 'INSERT INTO projekty_uzytkownik (uzytkownik_id, projekt_id) VALUES (?, (SELECT projekt_id FROM projekty WHERE tytul = ?))';
+
+  db.query(assignQuery, [userId, projectTytul], (error, results) => {
+    if (error) {
+      console.error('Błąd przypisywania użytkownika do projektu', error);
+      res.status(500).json({ error: 'Błąd przypisywania użytkownika do projektu' });
+    } else {
+      res.status(200).json({ message: 'Udane przypisanie użytkownika do projektu' });
+    }
+  }
+  );
 });
 
 app.get('/zadania', verifyAccessToken, async (req, res) => {
@@ -460,7 +476,6 @@ app.get('/zadania', verifyAccessToken, async (req, res) => {
     res.status(500).json({ error: 'Internal server error z /zadania' });
   }
 });
-
 
 app.get('/profil', verifyAccessToken, (req, res) => {
   const authHeader = req.headers.authorization;

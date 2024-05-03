@@ -1,20 +1,79 @@
 import React, {useState, useEffect} from 'react';
 import axios from 'axios';
 import { SortAscendingOutlined, DownOutlined, SortDescendingOutlined, 
-  ArrowDownOutlined, ArrowUpOutlined, AlignLeftOutlined } from '@ant-design/icons';
-import { Button, Dropdown,  Space  } from 'antd';
+  ArrowDownOutlined, ArrowUpOutlined, AlignLeftOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Space, Modal } from 'antd';
 
 const Czlonkowie = () => {
-
   const [people, setPeople] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  
+  const showModal = (userId) => {
+    setSelectedUserId(userId);
+    setIsModalOpen(true);
+  };
+
+  const handleOk = async () => {
+    console.log("Project Title:", selectedProject.tytul);
+    console.log("User ID:", selectedUserId);
+
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5000/assign`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: selectedUserId, projectTytul: selectedProject.tytul }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Nie udało się przypisać użytkownika do projektu');
+      }
+
+    } catch (error) {
+      console.error('Błąd przy przypisywaniu użytkownika do projektu', error);
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     axios.get('http://localhost:5000/members')
     .then(res => setPeople(res.data))
     .catch(err => console.error("Błąd pobierania użytkowników: ",err));
-  },[])
+    fetchProjects();
+  },[]);
 
-  console.table(people);
+  const fetchProjects = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+  
+      const response = await fetch('http://localhost:5000/projects', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error('Nie udało się pobrać projektów');
+      }
+  
+      const data = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error("Bład przy pobieraniu projektow" ,error);
+    }
+  };
+
+  //console.table(people);
 
   const handleMenuClick = (e) => {
     let sortedPeople = [...people];
@@ -99,12 +158,10 @@ const Czlonkowie = () => {
     },
   ];
 
-
   const menuProps = {
     items,
     onClick: handleMenuClick,
   };
-
 
   return (
     <div className='content'>
@@ -129,10 +186,26 @@ const Czlonkowie = () => {
         </div>
         <div className='czlonkowie-container'>
           {people.map(member =>(
-            <div key={member.id} className='czlonkowie-item'>
+            <div key={member.uzytkownik_id} className='czlonkowie-item'>
               <span>{member.imie} {member.nazw}</span> 
               <span>{member.status}</span> 
-              <span>{member.wiek}</span>
+              <span>{member.wiek}
+              <Button type="secondary" onClick={() => showModal(member.uzytkownik_id)} icon={<PlusCircleOutlined />}>
+              </Button>
+              <Modal title="Dodaj do projektu" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+                <form className='formZadania'>
+                  <label>Wybierz projekt: 
+                    <input list='projekty' name="nazwaProjektu" onChange={(e) => {
+                      const selected = projects.find(project => project.tytul === e.target.value);
+                      setSelectedProject(selected);}}/>
+                    <datalist id='projekty'>
+                      {projects.map(project => (
+                      <option key={project.id}>{project.tytul}</option>
+                      ))}
+                    </datalist>
+                  </label>
+                </form>
+              </Modal></span>
             </div>
           ))}
         </div>

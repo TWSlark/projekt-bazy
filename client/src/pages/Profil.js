@@ -57,8 +57,8 @@ const Profil = () => {
                             <h2>Email: {data.email}</h2>
                             <h2>Data urodzenia: {data.data_urodzenia}</h2>
                             <h2>Płeć: {data.plec === '1' ? 'Mężczyzna' : 'Kobieta'}</h2>
-                            <h2>Typ konta: {data.typ_konta === 'manager' ? 'Manager' : 'h1racownik'}</h2>
-                            <h2>Wspomógł projektów: {data.liczba_projektow}</h2>
+                            <h2>Typ konta: {data.typ_konta === 'manager' ? 'Manager' : 'Pracownik'}</h2>
+                            <h2>Kolaborator {data.liczba_projektow} {data.liczba_projektow !== '1' ? 'projektów.' : 'projektu.'}</h2>
                             <Button type="primary">
                                 Zmień hasło
                             </Button>
