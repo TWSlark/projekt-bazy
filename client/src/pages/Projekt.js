@@ -50,6 +50,18 @@ const Projekt = () => {
   const [tasks, setTasks] = useState([]);
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [userIdToDelete, setUserIdToDelete] = useState(null);
+
+  const showDeleteModal = (userId) => {
+    setUserIdToDelete(userId);
+    setIsDeleteModalVisible(true);
+  };
+
+  const hideDeleteModal = () => {
+    setUserIdToDelete(null);
+    setIsDeleteModalVisible(false);
+  };
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -153,6 +165,28 @@ const Projekt = () => {
     moveTask(taskId, newStatus);
   };
 
+  const deleteUser = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      await fetch(`http://localhost:5000/assign/${projectId}/${userIdToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      fetchTasks();
+    }
+    catch (error) {
+      console.error('Blad przy usuwaniu uzytkownika', error);
+    }
+
+    console.log(`Usuwanie uzytkownika z ID: ${userIdToDelete}`);
+    setUserIdToDelete(null);
+    hideDeleteModal();
+  };
+
   const stringToColor = (str) => {
     let hash = 0;
     str.split('').forEach(char => {
@@ -192,9 +226,12 @@ const Projekt = () => {
         <div className='users'>
           <Avatar.Group>
           {users.map(user => (
-            <Avatar key={user.uzytkownik_id} style={{ backgroundColor: stringToColor(user.imie || '')}}>{user.imie.charAt(0).toUpperCase()}</Avatar>
+            <Avatar key={user.uzytkownik_id} style={{ backgroundColor: stringToColor(user.imie || '')}} onClick={() => showDeleteModal(user.uzytkownik_id)}>{user.imie.charAt(0).toUpperCase()}</Avatar>
           ))}
           </Avatar.Group>
+          <Modal title="Usuwanie użytkownika" open={isDeleteModalVisible} onOk={deleteUser} onCancel={hideDeleteModal}>
+            <p>Czy na pewno chcesz usunąć tego użytkownika?</p>
+          </Modal>
         </div>
         <Button type="primary" onClick={showModal} icon={<PlusCircleOutlined />}>
           Dodaj zadanie

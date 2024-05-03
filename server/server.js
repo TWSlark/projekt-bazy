@@ -317,7 +317,7 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
       console.error('Blad pobierania uzytkownikow z projektu', error);
       res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
     } else {
-      const users = usersData.map(user => ({ id: user.uzytkownik_id, imie: user.imie }));
+      const users = usersData.map(user => ({ uzytkownik_id: user.uzytkownik_id, imie: user.imie }));
       
       db.query('SELECT * FROM zadania WHERE projekt_id = ?', [projectId], (error, tasksData, fields) => {
         if (error) {
@@ -331,7 +331,6 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
     }
   });
 });
-
 
 app.get('/tasks/:projectId/:taskId', verifyAccessToken, (req, res) => {
   const { projectId, taskId } = req.params;
@@ -464,6 +463,22 @@ app.post('/assign', (req, res) => {
   }
   );
 });
+
+app.delete('/assign/:projectId/:userId', verifyAccessToken, (req, res) => {
+  const { projectId, userId } = req.params;
+
+  const deleteQuery = 'DELETE FROM projekty_uzytkownik WHERE projekt_id = ? AND uzytkownik_id = ?';
+
+  db.query(deleteQuery, [projectId, userId], (error, results) => {
+    if (error) {
+      console.error('Błąd usuwania użytkownika z projektu', error);
+      res.status(500).json({ error: 'Błąd usuwania użytkownika z projektu' });
+    } else {
+      res.status(200).json({ message: 'Udane usunięcie użytkownika z projektu' });
+    }
+  });
+});
+
 
 app.get('/zadania', verifyAccessToken, async (req, res) => {
   try {
