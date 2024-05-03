@@ -310,11 +310,28 @@ app.post('/projects', async (req, res) => {
 app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
 
-  db.query('SELECT * FROM zadania WHERE projekt_id = ?', [projectId], (error, results, fields) => {
-    if (error) throw error;
-    res.json(results);
+  const usersQuery = 'SELECT uzytkownik_id, imie FROM uzytkownik WHERE uzytkownik_id IN (SELECT uzytkownik_id FROM projekty_uzytkownik WHERE projekt_id = ?)';
+
+  db.query(usersQuery, [projectId], (error, usersData) => {
+    if (error) {
+      console.error('Blad pobierania uzytkownikow z projektu', error);
+      res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
+    } else {
+      const users = usersData.map(user => ({ id: user.uzytkownik_id, imie: user.imie }));
+      
+      db.query('SELECT * FROM zadania WHERE projekt_id = ?', [projectId], (error, tasksData, fields) => {
+        if (error) {
+          console.error('Blad pobierania zadan', error);
+          res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
+        } else {
+          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy }));
+          res.json({ tasks, users });
+        }
+      });
+    }
   });
 });
+
 
 app.get('/tasks/:projectId/:taskId', verifyAccessToken, (req, res) => {
   const { projectId, taskId } = req.params;

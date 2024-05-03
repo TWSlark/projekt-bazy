@@ -3,7 +3,7 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams, Link } from 'react-router-dom';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { Modal, Button } from 'antd';
+import { Modal, Button, Avatar } from 'antd';
 
 const Task = ({ id, title, description, status, onMoveTask, onDeleteTask,projectId }) => {
   const [{ isDragging }, drag] = useDrag({
@@ -48,6 +48,7 @@ const Task = ({ id, title, description, status, onMoveTask, onDeleteTask,project
 const Projekt = () => {
   const { projectId } = useParams();
   const [tasks, setTasks] = useState([]);
+  const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const showModal = () => {
@@ -79,13 +80,15 @@ const Projekt = () => {
       const accessToken = localStorage.getItem('accessToken');
 
       const response = await fetch(`http://localhost:5000/tasks/${projectId}`, {
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${accessToken}`
         }
       });
 
       const data = await response.json();
-      setTasks(data);
+      setTasks(data.tasks);
+      setUsers(data.users);
     } catch (error) {
       console.error('Blad przy pobieraniu zadan', error);
     }
@@ -150,6 +153,19 @@ const Projekt = () => {
     moveTask(taskId, newStatus);
   };
 
+  const stringToColor = (str) => {
+    let hash = 0;
+    str.split('').forEach(char => {
+        hash = char.charCodeAt(0) + ((hash << 5) - hash)
+    })
+    let color = '#'
+    for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xff
+        color += value.toString(16).padStart(2, '0')
+    }
+    return color
+};
+
   const Container = ({ status }) => {
     const [{ isOver }, drop] = useDrop({
       accept: 'TASK',
@@ -173,6 +189,13 @@ const Projekt = () => {
     <div className='content'>
       <div className='contentTop'>
         <h1>Zadania</h1>
+        <div className='users'>
+          <Avatar.Group>
+          {users.map(user => (
+            <Avatar key={user.uzytkownik_id} style={{ backgroundColor: stringToColor(user.imie || '')}}>{user.imie.charAt(0).toUpperCase()}</Avatar>
+          ))}
+          </Avatar.Group>
+        </div>
         <Button type="primary" onClick={showModal} icon={<PlusCircleOutlined />}>
           Dodaj zadanie
         </Button>
