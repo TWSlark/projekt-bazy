@@ -9,6 +9,9 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger-output.json');
 const { sequelize, Projekty, Uzytkownik, Zadania, ProjektyUzytkownik } = require('./database.js');
 const Sequelize = require('sequelize');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 
 const tokenKey = process.env.TOKENKEY;
 
@@ -34,6 +37,17 @@ const db = mysql.createConnection({
   port: process.env.PORTDB,
   authPlugin: 'mysql_native_password'
 })
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = path.join(__dirname, '/uploads');
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+  }
+});
 
 sequelize.sync({ force: false })
   .then(() => {
@@ -572,6 +586,50 @@ app.post('/comments', verifyAccessToken, (req, res) => {
     });
   });
   
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/upload/:taskId', upload.single('file'), verifyAccessToken, async(req, res) => {
+  const authHeader = req.headers.authorization;
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+
+  if (!userEmail) {
+    return res.status(401).json({ error: 'Brak tokena' });
+  }
+
+  if (!req.file) {
+    return res.json("Brak pliku (serwer)");
+  }
+
+  const zadanie_id = req.params.taskId;
+  const danePliku = {
+    nazwa_pliku: req.file.filename,
+    sciezka_pliku: req.file.path
+  }
+
+  try
+  {
+    const sql = 'INSERT INTO zalaczniki (nazwa_pliku, sciezka_pliku, zadanie_id) VALUES (?,?,?)';
+
+  db.query(sql, [danePliku.nazwa_pliku,danePliku.sciezka_pliku,zadanie_id], (err, data) => {
+    if (err) {
+      return res.json("Error");
+    }
+    res.json("Plik przesłano pomyślnie");
+  });
+
+} catch (err)
+{
+  console.error("Błąd przy zapisie do bazy ", err);
+  return res.status(500).json({ error: 'Błąd serwera' });
+}
 });
 
 app.get('/profil', verifyAccessToken, (req, res) => {

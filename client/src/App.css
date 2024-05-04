@@ -329,3 +329,11 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #cccccc; 
   }
+.zadanie-files
+{
+    width: 40%;
+    height: 64%;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}

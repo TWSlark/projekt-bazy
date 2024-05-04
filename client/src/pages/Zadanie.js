@@ -8,7 +8,8 @@ const Zadanie = () => {
   const [task, setTask] = useState();
   const [comments, setComm] = useState([]);
   const [newComm, setNewComm] = useState('');
-
+  const [pliki, setPlik] = useState([]);
+  
   useEffect(() => {
     fetchTask(projectId, taskId);
     fetchComm(taskId);
@@ -68,6 +69,31 @@ const addComm = async(e) => {
   }
   }
 
+  const addFile = (e) => {
+    setPlik(e.target.files);
+  }
+
+  const uploadPlik = async() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const data = new FormData();
+
+    if (pliki) {
+      data.append('file', pliki[0]);
+    }
+
+    try {
+      const response = await axios.post(`http://localhost:5000/upload/${taskId}`, data, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      console.log('Dodano załączniki ', response);
+    } catch(err){
+      console.error("Błąd przy dodawaniu zadania", err);
+    }
+  }
+
 const zadanie = task;
 
   return (
@@ -101,12 +127,20 @@ const zadanie = task;
           ))
         )}
       </div>
-        
           <form onSubmit={addComm}>
             <Input className='comm-input' value={newComm} onChange={(e) => setNewComm(e.target.value)} placeholder='Dodaj komentarz...' />
             <button type="submit">Dodaj</button>    
           </form>
-
+    </div>
+    
+    <div className='zadanie-files'>
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        uploadPlik();
+      }}>
+        <input type="file" onChange={addFile} />
+        <button type="submit">Dodaj plik</button>
+      </form>
     </div>
     </>
   );
