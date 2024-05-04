@@ -262,3 +262,70 @@
     text-decoration: none;
     color: black;
 }
+.zadanie-header
+{
+    height: 30%;
+    font-size: large;
+    text-wrap: pretty;
+}
+.zadanie-comments
+{
+    width: 50%;
+    height: 70%;
+}
+.zadanie-comment
+{
+    background-color: transparent;
+    border: 1px solid #5030E5;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+.zadanie-comment > *
+{
+    margin: 0;
+    padding: 0px 10px 10px 10px;
+}
+.zad-imieData
+{
+    padding-block: 0;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.zad-imieData h3
+{
+    margin-top: 11px;
+}
+.zadanie-comments form
+{
+    display: flex;
+    position: fixed;
+    width: 40%;
+    bottom: 10px
+}
+.zadanie-comments form button
+{
+    border: none;
+    padding: 10px;
+    color: #fff;
+    background-color: #5030E5;
+    border-radius: 0 10px 10px 0;
+}
+.comm-input
+{
+    border-radius: 10px 0 0 10px;
+}
+::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #dddddd; 
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #cccccc; 
+  }

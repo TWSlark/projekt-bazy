@@ -527,6 +527,53 @@ app.get('/zadania', verifyAccessToken, async (req, res) => {
   }
 });
 
+app.get('/comments/:taskId', verifyAccessToken, (req, res) => {
+  const taskId = req.params.taskId;
+
+  const commentsQuery = 'SELECT k.komentarz_id, k.komentarz, k.data, u.imie, u.nazwisko FROM komentarze k JOIN uzytkownik u ON u.uzytkownik_id = k.uzytkownik_id WHERE zadanie_id = ?;';
+
+  db.query(commentsQuery, [taskId], (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania komentarzy', error);
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+app.post('/comments', verifyAccessToken, (req, res) => {
+  const authHeader = req.headers.authorization;
+  const {komentarz, zadanie_id} = req.body;
+  console.log(req.body);
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+
+  const userSql = "SELECT uzytkownik_id FROM uzytkownik WHERE email=?;";
+  let userId = null;
+  
+  db.query(userSql, [userEmail], (err, userRes) => {
+    if (err) {
+      return res.json("Błąd pobierania id usera");
+    }
+    
+    userId = userRes[0].uzytkownik_id;
+
+    const sql = 'INSERT INTO komentarze (komentarz, data, zadanie_id, uzytkownik_id) VALUES (?, NOW(), ?, ?)';
+
+    db.query(sql, [komentarz, zadanie_id, userId], (err, data) => {
+      if (err) {
+        return res.json("Błąd dodawania komentarza (serwer)");
+      }
+    });
+  });
+  
+});
+
 app.get('/profil', verifyAccessToken, (req, res) => {
   const authHeader = req.headers.authorization;
 
