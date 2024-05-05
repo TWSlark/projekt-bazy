@@ -19,6 +19,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/uploads', express.static('uploads'));
 
 let transport = nodemailer.createTransport({
   host: process.env.HOSTMT,
@@ -45,7 +46,7 @@ const storage = multer.diskStorage({
     cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    cb(null, file.originalname);
   }
 });
 
@@ -555,6 +556,36 @@ app.get('/comments/:taskId', verifyAccessToken, (req, res) => {
   });
 });
 
+app.get('/files/:taskId', verifyAccessToken, (req, res) => {
+  const taskId = req.params.taskId;
+
+  const filesQuery = 'SELECT zalacznik_id id, nazwa_pliku nazwa, sciezka_pliku sciezka FROM zalaczniki WHERE zadanie_id = ?;';
+
+  db.query(filesQuery, [taskId], (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania plików', error);
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});
+
+app.get('/download/:nazwa', (req, res) => {
+  const nazwaPliku = req.params.nazwa;
+  const sciezkaFolderu = path.join(__dirname, 'uploads');
+  const sciezkaPliku = path.join(sciezkaFolderu, nazwaPliku);
+
+  res.setHeader('Content-Disposition', 'attachment; filename=' + nazwaPliku);
+  res.setHeader('Content-Type', 'application/octet-stream');
+
+  res.download(sciezkaPliku, nazwaPliku, (err) => {
+    if (err) {
+      console.error('Wystąpił błąd podczas pobierania pliku:', err);
+      res.status(500).send('Nie można pobrać pliku.');
+    }
+  });
+});
+
 app.post('/comments', verifyAccessToken, (req, res) => {
   const authHeader = req.headers.authorization;
   const {komentarz, zadanie_id} = req.body;
@@ -611,7 +642,7 @@ app.post('/upload/:taskId', upload.single('file'), verifyAccessToken, async(req,
   const zadanie_id = req.params.taskId;
   const danePliku = {
     nazwa_pliku: req.file.filename,
-    sciezka_pliku: req.file.path
+    sciezka_pliku: `http://localhost:5000/uploads/${req.file.filename}`
   }
 
   try

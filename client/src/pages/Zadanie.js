@@ -9,10 +9,12 @@ const Zadanie = () => {
   const [comments, setComm] = useState([]);
   const [newComm, setNewComm] = useState('');
   const [pliki, setPlik] = useState([]);
+  const [listaPlikow, setListaPlikow] = useState([]);
   
   useEffect(() => {
     fetchTask(projectId, taskId);
     fetchComm(taskId);
+    fetchPliki(taskId)
   }, [projectId, taskId,comments]);
 
   const fetchTask = async (projectId, taskId) => {
@@ -44,6 +46,22 @@ try {
   setComm(response.data);
 } catch (error) {
   console.error('Blad przy pobieraniu zadania w jego zakladce', error);
+}
+};
+
+const fetchPliki= async (taskId) => {
+  const accessToken = localStorage.getItem('accessToken');
+try {
+
+  const response = await axios.get(`http://localhost:5000/files/${taskId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  setListaPlikow(response.data);
+} catch (error) {
+  console.error('Blad przy pobieraniu listy plików', error);
 }
 };
 
@@ -106,41 +124,49 @@ const zadanie = task;
         </div>
       )}
     </div>
-    <div className='zadanie-comments'
-    style={{
-      width: '50%'
-    }}>
-      <div style={{
-        height: '88%',
-        overflow: 'auto'
+    <div className='contentBottom'>
+      <div className='zadanie-comments'
+      style={{
+        width: '50%'
       }}>
-        {comments.length === 0 ? 
-        (<h3>Brak komentarzy dla tego zadania</h3>) :
-        (
-          comments.map((comm) => (
-            <div className='zadanie-comment' key={comm.komentarz_id}>
-              <div className='zad-imieData'><h3>{comm.imie} {comm.nazwisko}</h3> 
-                <span>{new Date(comm.data).toLocaleDateString()} {new Date(comm.data).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        <div style={{
+          height: '88%',
+          overflow: 'auto'
+        }}>
+          {comments.length === 0 ? 
+          (<h3>Brak komentarzy dla tego zadania</h3>) :
+          (
+            comments.map((comm) => (
+              <div className='zadanie-comment' key={comm.komentarz_id}>
+                <div className='zad-imieData'><h3>{comm.imie} {comm.nazwisko}</h3> 
+                  <span>{new Date(comm.data).toLocaleDateString()} {new Date(comm.data).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                </div>
+                <p>{comm.komentarz}</p>
               </div>
-              <p>{comm.komentarz}</p>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
+            <form onSubmit={addComm}>
+              <Input className='comm-input' value={newComm} onChange={(e) => setNewComm(e.target.value)} placeholder='Dodaj komentarz...' />
+              <button type="submit">Dodaj</button>    
+            </form>
       </div>
-          <form onSubmit={addComm}>
-            <Input className='comm-input' value={newComm} onChange={(e) => setNewComm(e.target.value)} placeholder='Dodaj komentarz...' />
-            <button type="submit">Dodaj</button>    
-          </form>
-    </div>
-    
-    <div className='zadanie-files'>
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        uploadPlik();
-      }}>
-        <input type="file" onChange={addFile} />
-        <button type="submit">Dodaj plik</button>
-      </form>
+      
+      <div className='zadanie-files'>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          uploadPlik();
+        }}>
+          <input type="file" className="custom-file-input"onChange={addFile} />
+          <button type="submit">Dodaj plik</button>
+        </form>
+  
+        {listaPlikow.map((plik, index)=>(
+          <div className='file' key={index}>
+            <a href={`http://localhost:5000/download/${plik.nazwa}`} download={plik.nazwa}>{plik.nazwa}</a>
+          </div>
+        ))}
+      </div>
     </div>
     </>
   );
