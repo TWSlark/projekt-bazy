@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Avatar, Col, Row, Button } from "antd";
+import { Avatar, Col, Row, Button, Modal } from "antd";
+import axios from "axios";
 
 const Profil = () => {
     const [data, setData] = useState({});
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         getProfile();
     }, []);
+
+    const showModal = () => {
+        setIsModalOpen(true);
+      };
+    
+      const handleCancel = () => {
+        setIsModalOpen(false);
+      };
 
     const getProfile = async () => {
         try {
@@ -26,6 +36,28 @@ const Profil = () => {
         } catch (error) {
             console.error('Blad przy pobieraniu profilu', error);
         }
+    };
+
+    const sendMail = async () => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            const email = document.getElementById('email').value;
+            console.log('email: ', email);
+
+            const response = await axios.post(`http://localhost:5000/requestNewPass`, 
+            {
+                email: email
+            },{
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+        } catch (error) {
+            console.error('Blad przy requescie zmiany hasła', error);
+        }
+        setIsModalOpen(false);
     };
 
     const stringToColor = (str) => {
@@ -59,9 +91,12 @@ const Profil = () => {
                             <h2>Płeć: {data.plec === '1' ? 'Mężczyzna' : 'Kobieta'}</h2>
                             <h2>Typ konta: {data.typ_konta === 'manager' ? 'Manager' : 'Pracownik'}</h2>
                             <h2>Kolaborator {data.liczba_projektow} {data.liczba_projektow !== '1' ? 'projektów.' : 'projektu.'}</h2>
-                            <Button type="primary">
+                            <Button type="primary" onClick={showModal}>
                                 Zmień hasło
                             </Button>
+                            <Modal title="Zmiana Hasła" open={isModalOpen} onOk={sendMail} onCancel={handleCancel}>
+                            <input type="email" placeholder="Podaj swój adres email" id="email" name="email" required />
+                            </Modal>
                         </div>
                     </Col>
                 </Row>

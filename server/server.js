@@ -688,6 +688,108 @@ app.get('/profil', verifyAccessToken, (req, res) => {
   });
 });
 
+app.post('/requestNewPass', (req, res) => {
+
+  const {email} = req.body;
+  console.log(email);
+  
+  const sql = 'SELECT * FROM uzytkownik WHERE email = ?;';
+
+  db.query(sql,[email],(err,result)=>{
+    if (err) {
+      console.error('Błąd pobierania użytkownika', err);
+    }
+
+    if (result.length === 0) {
+      console.error('Użytkownik nie znaleziony');
+    }
+
+    bcrypt.genSalt(10, (err, salt)=>{
+      if (err) {
+        console.log("Błąd generowania soli", err);
+        return;
+      }
+    const userEmail = result[0].email;
+    const token = jwt.sign({email: userEmail},tokenKey,{ expiresIn: '30min' });
+
+    bcrypt.hash(token, salt, (err,hashedToken) =>{
+      if (err) {
+        console.log(err);
+      }
+      const sql = "Update uzytkownik set passToken = ? WHERE email = ?;";
+
+      db.query(sql, [hashedToken,userEmail], (err,data) => {
+        if (err) {
+          console.log(err);
+          return res.json("Error");
+        }
+      transport.sendMail({
+        from: 'noreply@taskify',
+        to: userEmail,
+        subject: "Taskify: Zmiana hasła użytkownika",
+        html: `Kliknij w link aby zmienić swoje hasło: <a href="http://localhost:5000/changePass?hashToken=${hashedToken}">Zmień hasło</a>`
+      });
+    });
+  })
+})
+})
+})
+
+app.get('/changePass', (req, res) => {
+  const { hashToken } = req.query;
+  const searchSql = "SELECT passToken FROM uzytkownik WHERE `passToken` = ?"
+
+  db.query(searchSql,[hashToken], (err,result)=>{
+    if (err) {
+      return res.json({ error: "Błąd szukania użytkownika" });
+    }
+    if (result.length>0) {
+
+      const userToken = result[0].passToken;
+
+      if (userToken === hashToken) {
+        res.redirect('http://localhost:3000/zmianahasla');
+      }
+    }
+  })
+});
+
+
+app.post('/newPass', (req, res) => {
+  const { newHaslo, email } = req.body
+  console.log('req.body: ', req.body);
+  const sql = process.env.SQL_LOGIN_QUERY;
+
+  db.query(sql, [email], (err, data) => {
+    if (err) {
+      return res.json("Error");
+    }
+    if (data.length > 0) {
+          bcrypt.genSalt(10, (err, salt) => {
+            if (err) {
+              console.log("Błąd generowania soli", err);
+              return;
+            }
+            bcrypt.hash(newHaslo.toString(), salt, (err, hash) => {
+              if (err) {
+                console.log(err);
+              }
+              const setNewPassQuery = "UPDATE uzytkownik SET haslo = ? WHERE email = ?";
+              db.query(setNewPassQuery, [hash, email], (updateErr, updateResult) => {
+                if (updateErr) {
+                  return res.json({ error: "Błąd zapisu refreshToken w bazie danych" });
+                }
+                return res.json({ message: "Poprawnie zmieniono hasło"});
+              });
+
+            });
+          });
+        }
+      });
+    })
+
+
+
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
 });

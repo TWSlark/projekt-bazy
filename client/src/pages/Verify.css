@@ -26,3 +26,47 @@
     border-radius: 16px;
     text-transform: uppercase;
 }
+
+.verify-container form
+{
+    width: 20vw;
+    text-align: center;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.verify-container form input
+{
+    width: 17vw;
+    height: 3rem;
+    padding: 0 37px;
+    color: #787486;
+    font-size: 1vw;
+    background-color: #F8F4F4;
+    outline: none;
+    border:none;
+    caret-color: #5030E5;
+    margin: 0;
+    border-radius: 5px;
+}
+
+.verify-container form button
+{
+    height: 3rem;
+    width: 17vw;
+    background-color: #5030E5;
+    border: none;
+    padding-block: 10px;
+    width: 20rem;
+    color: #fff;
+    text-transform: uppercase;
+    font-weight: bolder;
+    cursor: pointer;
+    border-radius: 5px;
+}

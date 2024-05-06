@@ -404,3 +404,17 @@
 {
     width: 50%;
 }
+#email
+{
+    width: 14vw;
+    height: 1rem;
+    padding: 10px 37px;
+    color: #787486;
+    font-weight: bolder;
+    background-color: #F8F4F4;
+    outline: none;
+    border:none;
+    caret-color: #5030E5;
+    margin: 0;
+    border-radius: 5px;
+}

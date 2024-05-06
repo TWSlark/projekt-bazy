@@ -17,6 +17,7 @@ import Signup from './pages/Signup';
 import Verify from './pages/Verify';
 import Profil from './pages/Profil';
 import Zadanie from './pages/Zadanie';
+import ZmianaHasla from './pages/ZmianaHasla';
 
 const { Header, Content, Sider } = Layout;
 
@@ -26,6 +27,7 @@ const App = () => {
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify" element={<Verify />} />
+        <Route path="/zmianahasla" element={<ZmianaHasla />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/pulpit" element={<Pulpit />} />
