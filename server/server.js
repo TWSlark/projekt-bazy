@@ -233,7 +233,7 @@ app.post('/refresh-token', (req, res) => {
   });
 });
 
-app.post('/logout', (req, res) => {
+app.put('/logout', (req, res) => {
   const authHeader = req.headers.authorization;
 
     let userEmail = null;
@@ -411,7 +411,7 @@ app.delete('/tasks/:taskId', verifyAccessToken, (req, res) => {
   });
 });
 
-app.post('/tasks/:taskId/assign', verifyAccessToken, async (req, res) => {
+app.put('/tasks/:taskId/assign', verifyAccessToken, async (req, res) => {
   const { taskId } = req.params;
   const authHeader = req.headers.authorization;
 
@@ -437,7 +437,7 @@ app.post('/tasks/:taskId/assign', verifyAccessToken, async (req, res) => {
   }
 });
 
-app.post('/tasks/:taskId/unassign', verifyAccessToken, async (req, res) => {
+app.put('/tasks/:taskId/unassign', verifyAccessToken, async (req, res) => {
   const { taskId } = req.params;
 
   try {
@@ -451,7 +451,7 @@ app.post('/tasks/:taskId/unassign', verifyAccessToken, async (req, res) => {
   }
 });
 
-app.post('/tasks/:taskId/complete', verifyAccessToken, async (req, res) => {
+app.put('/tasks/:taskId/complete', verifyAccessToken, async (req, res) => {
   const { taskId } = req.params;
 
   try {

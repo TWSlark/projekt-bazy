@@ -158,7 +158,7 @@ const stringToColor = (str) => {
   const handleLogout = () =>{
 
     fetch('http://localhost:5000/logout', {
-      method: 'POST',
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'

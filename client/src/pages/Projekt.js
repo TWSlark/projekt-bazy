@@ -167,7 +167,7 @@ const Projekt = () => {
     if (newStatus === 'Trwajace') {
       try {
         await fetch(`http://localhost:5000/tasks/${taskId}/assign`, {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ const Projekt = () => {
     } else if (newStatus === 'Do zrobienia') {
       try {
         await fetch(`http://localhost:5000/tasks/${taskId}/unassign`, {
-          method: 'POST',
+          method: 'PUT',
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ const Projekt = () => {
   
         if (currentStatus === 'Trwajace') {
           await fetch(`http://localhost:5000/tasks/${taskId}/complete`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
               Authorization: `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
