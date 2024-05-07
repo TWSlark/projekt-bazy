@@ -3,7 +3,7 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams, Link } from 'react-router-dom';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { Modal, Button, Avatar } from 'antd';
+import { Modal, Button, Avatar, Tooltip } from 'antd';
 
 const Task = ({ id, title, description, status, onMoveTask, onDeleteTask,projectId }) => {
   const [{ isDragging }, drag] = useDrag({
@@ -161,7 +161,61 @@ const Projekt = () => {
     }
   };
 
-  const handleDrop = (taskId, newStatus) => {
+  const handleDrop = async (taskId, newStatus) => {
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (newStatus === 'Trwajace') {
+      try {
+        await fetch(`http://localhost:5000/tasks/${taskId}/assign`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+      } catch (error) {
+        console.error('Blad z przypisaniem uzyt do zad', error);
+      }
+    } else if (newStatus === 'Do zrobienia') {
+      try {
+        await fetch(`http://localhost:5000/tasks/${taskId}/unassign`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (error) {
+        console.error('Blad z przypisaniem uzyt do zad', error);
+      }
+    } else if (newStatus === 'Zrobione') {
+      try {
+        const taskResponse = await fetch(`http://localhost:5000/tasks/${projectId}/${taskId}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const taskData = await taskResponse.json();
+        const currentStatus = taskData[0].status;
+  
+        if (currentStatus === 'Trwajace') {
+          await fetch(`http://localhost:5000/tasks/${taskId}/complete`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        } else {
+          console.error('Nie mozna przeniesc z "Do zrobienia" do "Zrobione"');
+          return;
+        }
+      } catch (error) {
+        console.error('Blad z przypisaniem uzyt do zad', error);
+      }
+    }
+
     moveTask(taskId, newStatus);
   };
 
@@ -226,7 +280,9 @@ const Projekt = () => {
         <div className='users'>
           <Avatar.Group>
           {users.map(user => (
-            <Avatar key={user.uzytkownik_id} style={{ backgroundColor: stringToColor(user.imie || '')}} onClick={() => showDeleteModal(user.uzytkownik_id)}>{user.imie.charAt(0).toUpperCase()}</Avatar>
+            <Tooltip title={user.imie + " " + user.nazwisko}  placement="top">
+              <Avatar key={user.uzytkownik_id} style={{ backgroundColor: stringToColor(user.imie || '')}} onClick={() => showDeleteModal(user.uzytkownik_id)}>{user.imie.charAt(0).toUpperCase()}</Avatar>
+            </Tooltip>
           ))}
           </Avatar.Group>
           <Modal title="Usuwanie użytkownika" open={isDeleteModalVisible} onOk={deleteUser} onCancel={hideDeleteModal}>

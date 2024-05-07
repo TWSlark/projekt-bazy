@@ -5,7 +5,7 @@ import {  Button, Input, Space  } from 'antd';
 
 const Zadanie = () => {
   const { projectId, taskId } = useParams();
-  const [task, setTask] = useState();
+  const [task, setTask] = useState({});
   const [comments, setComm] = useState([]);
   const [newComm, setNewComm] = useState('');
   const [pliki, setPlik] = useState([]);
@@ -117,7 +117,7 @@ const zadanie = task;
   return (
     <>
     <div className='zadanie-header'>
-      {zadanie && (
+      {zadanie && zadanie[0] && (
         <div>
           <h1>{zadanie[0].tytul}</h1>
           <p>{zadanie[0].opis}</p>
