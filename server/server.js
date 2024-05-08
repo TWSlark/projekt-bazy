@@ -233,7 +233,7 @@ app.post('/refresh-token', (req, res) => {
   });
 });
 
-app.put('/logout', (req, res) => {
+app.post('/logout', (req, res) => {
   const authHeader = req.headers.authorization;
 
     let userEmail = null;
@@ -324,23 +324,15 @@ app.post('/projects', async (req, res) => {
 
 app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
-  const authHeader = req.headers.authorization;
 
-  let userEmail = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring('Bearer '.length);
-      const decoded = jwt.verify(token, tokenKey);
-      userEmail = decoded.email;
-    }
+  const usersQuery = 'SELECT uzytkownik_id, imie FROM uzytkownik WHERE uzytkownik_id IN (SELECT uzytkownik_id FROM projekty_uzytkownik WHERE projekt_id = ?)';
 
-  const usersQuery = 'SELECT uzytkownik_id, imie, nazwisko FROM uzytkownik WHERE uzytkownik_id IN (SELECT uzytkownik_id FROM projekty_uzytkownik WHERE projekt_id = ?) AND email != ?';
-
-  db.query(usersQuery, [projectId, userEmail], (error, usersData) => {
+  db.query(usersQuery, [projectId], (error, usersData) => {
     if (error) {
       console.error('Blad pobierania uzytkownikow z projektu', error);
       res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
     } else {
-      const users = usersData.map(user => ({ uzytkownik_id: user.uzytkownik_id, imie: user.imie, nazwisko: user.nazwisko}));
+      const users = usersData.map(user => ({ uzytkownik_id: user.uzytkownik_id, imie: user.imie }));
       
       db.query('SELECT * FROM zadania WHERE projekt_id = ?', [projectId], (error, tasksData, fields) => {
         if (error) {
@@ -409,60 +401,6 @@ app.delete('/tasks/:taskId', verifyAccessToken, (req, res) => {
       res.status(200).json({ message: 'Udane usuniecie zadania' });
     }
   });
-});
-
-app.put('/tasks/:taskId/assign', verifyAccessToken, async (req, res) => {
-  const { taskId } = req.params;
-  const authHeader = req.headers.authorization;
-
-  let userEmail = null;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring('Bearer '.length);
-    const decoded = jwt.verify(token, tokenKey);
-    userEmail = decoded.email;
-  }
-
-  try {
-    const findUserQuery = 'SELECT uzytkownik_id FROM uzytkownik WHERE email = ?';
-    const [userResult] = await db.promise().query(findUserQuery, [userEmail]);
-    const userId = userResult[0]?.uzytkownik_id;
-
-    const updateQuery = 'UPDATE zadania SET uzytkownik_id = ?, rozpoczecie_pracy = NOW(), zakonczenie_pracy = NULL WHERE zadanie_id = ?';
-    db.query(updateQuery, [userId, taskId]);
-
-    res.status(200).json({ message: 'Zadanie przypisane do uzytkownika' });
-  } catch (error) {
-    console.error('Nie udalo sie przypisac zadania do uzytkownika', error);
-    res.status(500).json({ error: 'Internal server error z /tasks/:taskId/assign' });
-  }
-});
-
-app.put('/tasks/:taskId/unassign', verifyAccessToken, async (req, res) => {
-  const { taskId } = req.params;
-
-  try {
-    const updateQuery = 'UPDATE zadania SET uzytkownik_id = NULL, rozpoczecie_pracy = NULL, zakonczenie_pracy = NULL WHERE zadanie_id = ?';
-    db.query(updateQuery, [taskId]);
-
-    res.status(200).json({ message: 'Reset przypisane do uzytkownika' });
-  } catch (error) {
-    console.error('Reset udalo sie przypisac zadania do uzytkownika', error);
-    res.status(500).json({ error: 'Internal server error z /tasks/:taskId/unassign' });
-  }
-});
-
-app.put('/tasks/:taskId/complete', verifyAccessToken, async (req, res) => {
-  const { taskId } = req.params;
-
-  try {
-    const updateQuery = 'UPDATE zadania SET zakonczenie_pracy = CURRENT_TIMESTAMP WHERE zadanie_id = ?';
-    db.query(updateQuery, [taskId]);
-
-    res.status(200).json({ message: 'Task completion date updated successfully' });
-  } catch (error) {
-    console.error('Error updating task completion date', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 app.get('/kalendarz', verifyAccessToken, async (req, res) => {
@@ -799,7 +737,7 @@ app.post('/requestNewPass', (req, res) => {
 
 app.get('/changePass', (req, res) => {
   const { hashToken } = req.query;
-  const searchSql = "SELECT passToken FROM uzytkownik WHERE `passToken` = ?"
+  const searchSql = "SELECT passToken, email FROM uzytkownik WHERE `passToken` = ?"
 
   db.query(searchSql,[hashToken], (err,result)=>{
     if (err) {
@@ -808,9 +746,10 @@ app.get('/changePass', (req, res) => {
     if (result.length>0) {
 
       const userToken = result[0].passToken;
+      const userEmail = result[0].email
 
       if (userToken === hashToken) {
-        res.redirect('http://localhost:3000/zmianahasla');
+        res.redirect(`http://localhost:3000/zmianahasla?userToken=${encodeURIComponent(userToken)}`);
       }
     }
   })
@@ -818,11 +757,26 @@ app.get('/changePass', (req, res) => {
 
 
 app.post('/newPass', (req, res) => {
-  const { newHaslo, email } = req.body
+
+  const authHeader = req.headers.authorization;
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+  
+  if (!userEmail) {
+    return res.status(401).json({ error: 'Brak tokena' });
+  }
+  
+  const { newHaslo } = req.body
   console.log('req.body: ', req.body);
+  console.log('userEmail : ', userEmail );
   const sql = process.env.SQL_LOGIN_QUERY;
 
-  db.query(sql, [email], (err, data) => {
+  db.query(sql, [userEmail], (err, data) => {
     if (err) {
       return res.json("Error");
     }
@@ -837,13 +791,12 @@ app.post('/newPass', (req, res) => {
                 console.log(err);
               }
               const setNewPassQuery = "UPDATE uzytkownik SET haslo = ? WHERE email = ?";
-              db.query(setNewPassQuery, [hash, email], (updateErr, updateResult) => {
+              db.query(setNewPassQuery, [hash, userEmail], (updateErr, updateResult) => {
                 if (updateErr) {
                   return res.json({ error: "Błąd zapisu refreshToken w bazie danych" });
                 }
-                return res.json({ message: "Poprawnie zmieniono hasło"});
-              });
-
+                res.json({ success: "Hasło zostało zaktualizowane" });
+              });           
             });
           });
         }

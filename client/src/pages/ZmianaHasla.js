@@ -4,7 +4,6 @@ import axios from 'axios';
 
 function ZmianaHasla() {
     const [dane, setDane] = useState({
-        email:'',
         haslo:'',
         newHaslo:''
     });
@@ -17,16 +16,8 @@ function ZmianaHasla() {
 
     function validNewPass(dane) {
         let error = {}
-        const emailRe = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         const passRe = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()-+=])[A-Za-z\d!@#$%^&*()-+=]{8,}$/;
 
-        if (!emailRe.test(dane.email)) {
-            error.email = "Email jest nie poprawny"
-        }
-        else {
-            error.email = "";
-        }
-    
         if (!passRe.test(dane.haslo)) {
             error.password = "Hasło nie spełnia wymagań"
         }
@@ -43,12 +34,16 @@ function ZmianaHasla() {
     
         return error;
     }
+    const showAlert = () => {
+        alert("Hasło zostało zmienione");
+        window.location.href="http://localhost:3000";
+    }
 
     const handleSubmit = async (e) =>{
         e.preventDefault();
         setErr(validNewPass(dane));
         const accessToken = localStorage.getItem('accessToken');
-
+        
         try {
             const response = await axios.post(`http://localhost:5000/newPass`, dane, {
             headers: {
@@ -56,8 +51,14 @@ function ZmianaHasla() {
                 'Content-Type': 'application/json'
             }
             })
-            console.log('response: ', response);
 
+            if(response.data.success) {
+              showAlert();
+            } else {
+              console.error("Błąd: ", response.data.error);
+            }
+
+            console.log('response: ', response);
         } catch(err){
             console.error("Błąd przy dodawaniu zadania", err);
         }
@@ -66,8 +67,6 @@ function ZmianaHasla() {
     return (
         <div className='verify-container'>
             <form method='POST' onSubmit={handleSubmit}>
-                <input type="text" placeholder="Email" name='email' onChange={handleInput}/>
-                {err.email && <p> {err.email}</p>}
                 <input type='password' id='newPass' name='haslo' onChange={handleInput} placeholder='Podaj nowe hasło'/>
                 {err.password && <p> {err.password}</p>}
                 <input type='password' id='reEntry' name='newHaslo' onChange={handleInput} placeholder='Podaj ponownie nowe hasło'/>
