@@ -10,7 +10,7 @@ function valid(values) {
         error.email = "";
     }
 
-    if (!passRe.test(values.password)) {
+    if (!passRe.test(values.haslo)) {
         error.password = "Hasło jest nie poprawne"
     }
     else {
