@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import {  Button, Input, Space  } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import { message, Upload } from 'antd';
+
+const { Dragger } = Upload;
 
 const Zadanie = () => {
   const { projectId, taskId } = useParams();
@@ -87,30 +91,30 @@ const addComm = async(e) => {
   }
   }
 
-  const addFile = (e) => {
-    setPlik(e.target.files);
-  }
-
-  const uploadPlik = async() => {
-    const accessToken = localStorage.getItem('accessToken');
-    const data = new FormData();
-
-    if (pliki) {
-      data.append('file', pliki[0]);
-    }
-
-    try {
-      const response = await axios.post(`http://localhost:5000/upload/${taskId}`, data, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      })
-      console.log('Dodano załączniki ', response);
-    } catch(err){
-      console.error("Błąd przy dodawaniu zadania", err);
-    }
-  }
+  const accessToken = localStorage.getItem('accessToken');
+  const props = {
+    name: 'file',
+    multiple: true,
+    action: `http://localhost:5000/upload/${taskId}`,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    onChange(info) {
+      const { status } = info.file;
+      if (status !== 'uploading') {
+        console.log(info.file, info.fileList);
+      }
+      if (status === 'done') {
+        message.success(`${info.file.name} plik został pomyślnie przesłany.`);
+        setPlik(info.fileList);
+      } else if (status === 'error') {
+        message.error(`${info.file.name} przesyłanie pliku nie powiodło się.`);
+      }
+    },
+    onDrop(e) {
+      console.log('Upuszczone pliki', e.dataTransfer.files);
+    },
+  };
 
 const zadanie = task;
 
@@ -130,7 +134,7 @@ const zadanie = task;
         width: '50%'
       }}>
         <div style={{
-          height: '88%',
+          height: '32rem',
           overflow: 'auto'
         }}>
           {comments.length === 0 ? 
@@ -153,19 +157,23 @@ const zadanie = task;
       </div>
       
       <div className='zadanie-files'>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          uploadPlik();
-        }}>
-          <input type="file" className="custom-file-input"onChange={addFile} />
-          <button type="submit">Dodaj plik</button>
-        </form>
-  
-        {listaPlikow.map((plik, index)=>(
-          <div className='file' key={index}>
-            <a href={`http://localhost:5000/download/${plik.nazwa}`} download={plik.nazwa}>{plik.nazwa}</a>
-          </div>
-        ))}
+      <Dragger className='dragger' style={{ width: '96%' }} {...props}>
+      <p className="ant-upload-drag-icon">
+        <InboxOutlined style={{ color: '#5030E5' }}/>
+      </p>
+      <p className="ant-upload-text">Kliknij lub przeciągnij plik do tego obszaru, aby przesłać</p>
+      <p className="ant-upload-hint">
+        Obsługa pojedynczego lub masowego przesyłania. Surowo zabronione jest przesyłanie danych firmowych lub innych zakazanych plików.
+      </p>
+      </Dragger>
+        <h1 style={{padding: 0,margin:0, color: '#5030E5'}}>Załączniki:</h1>
+        <div className='files-list'>
+          {listaPlikow.map((plik, index)=>(
+            <div className='file' key={index}>
+              <a style={{ color: '#5030E5', width: '30%' }} href={`http://localhost:5000/download/${plik.nazwa}`} download={plik.nazwa}>{plik.nazwa}</a>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
     </>
