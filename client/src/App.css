@@ -378,3 +378,36 @@
     border-radius: 10px;
     padding: 14px;
 }
+.events
+{
+    list-style: none;
+}
+.passChange
+{
+    margin-right: 10px;
+}
+.editProfile input, .editProfile select
+{
+    width: 8vw;
+    height: 1.5rem;
+    padding: 10px 37px;
+    color: #787486;
+    font-weight: bolder;
+    background-color: #F8F4F4;
+    outline: none;
+    border:none;
+    caret-color: #5030E5;
+    margin: 0;
+    border-radius: 5px;
+}
+.ant-modal-body
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.editProfile select
+{
+    width: 11.9vw;
+    height: 2.7rem;
+}

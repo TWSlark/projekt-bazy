@@ -750,6 +750,33 @@ app.get('/profil', verifyAccessToken, (req, res) => {
   });
 });
 
+app.put('/updateProfil', verifyAccessToken, async(req, res) => {
+  const authHeader = req.headers.authorization;
+  const { imie, nazwisko, data_urodzenia, plec } = req.body;
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+
+  try {
+    const updateProfileSql = "UPDATE uzytkownik SET imie=?, nazwisko=?, data_urodzenia=?, plec=? WHERE email = ?;";
+    db.query(updateProfileSql, [imie, nazwisko, data_urodzenia, plec, userEmail], (err, result) => {
+      if (err) {
+        console.error('Błąd przy aktualizacji profilu:', err);
+        return res.status(500).send('Wewnętrzny błąd serwera');
+      }
+      res.status(200).send('Dane zostały zaktualizowane');
+    });
+  } catch (error) {
+    console.error('Błąd przy aktualizacji profilu:', error);
+    res.status(500).send('Wewnętrzny błąd serwera');
+  }
+});
+
+
 app.post('/requestNewPass', (req, res) => {
 
   const {email} = req.body;
