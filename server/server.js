@@ -254,6 +254,40 @@ app.put('/logout', (req, res) => {
   })
 });
 
+app.get('/manager', verifyAccessToken, async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    let userEmail = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring('Bearer '.length);
+      const decoded = jwt.verify(token, tokenKey);
+      userEmail = decoded.email;
+    }
+
+    if (!userEmail) {
+      return res.status(401).json({ error: 'Brak tokena' });
+    }
+
+    const user = await Uzytkownik.findOne({ where: { email: userEmail } });
+    if (!user) {
+      return res.status(404).json({ error: 'Nie znaleziono uzytkownika' });
+    }
+
+    const query = 'SELECT p.* FROM projekty p JOIN projekty_uzytkownik pu ON p.projekt_id = pu.projekt_id WHERE pu.uzytkownik_id = :userId AND pu.manager = 1;';
+
+    const projects = await sequelize.query(query, {
+      replacements: { userId: user.uzytkownik_id },
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    res.json(projects);
+  } catch (error) {
+    console.error('Internal server error z /projects', error);
+    res.status(500).json({ error: 'Internal server error z /projects' });
+  }
+});
+
 app.get('/projects', verifyAccessToken, async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -309,7 +343,7 @@ app.post('/projects', async (req, res) => {
     if (userEmail) {
       const user = await Uzytkownik.findOne({ where: { email: userEmail } });
       if (user) {
-        await user.addProjekty(newProject);
+        await user.addProjekty(newProject, { through: { manager: 1 } });
       } else {
         console.error('Nie znaleziono uzytkownika');
       }

@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
         uzytkownik_id: {
             type: DataTypes.INTEGER,
             allowNull: false
+        },
+        manager: {
+            type: DataTypes.INTEGER,
+            allowNull: false
         }
     }, {
         freezeTableName: true,

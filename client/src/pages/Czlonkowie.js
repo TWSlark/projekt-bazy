@@ -56,7 +56,7 @@ const Czlonkowie = () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
   
-      const response = await fetch('http://localhost:5000/projects', {
+      const response = await fetch('http://localhost:5000/manager', {
         headers: {
           Authorization: `Bearer ${accessToken}`
         }
