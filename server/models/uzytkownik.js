@@ -32,10 +32,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM('1', '2'),
         allowNull: false
       },
-      typ_konta: {
-        type: DataTypes.ENUM('uzytkownik', 'manager'),
-        allowNull: false
-      },
       token: {
         type: DataTypes.STRING(255),
         allowNull: true

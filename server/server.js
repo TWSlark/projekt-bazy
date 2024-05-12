@@ -87,7 +87,6 @@ app.post('/signup', (req, res) => {
       req.body.nazwisko,
       req.body.data,
       req.body.plec,
-      "manager",
       hashToken,
       0,
       null
@@ -356,6 +355,26 @@ app.post('/projects', async (req, res) => {
   }
 });
 
+app.delete('/projects/:projectId', verifyAccessToken, async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    querry = 'DELETE FROM projekty WHERE projekt_id = ?';
+
+    db.query(querry, [projectId], (error, results) => {
+      if (error) {
+        console.error('Nie usunięto projektu:', error);
+        res.status(500).json({ error: 'Nie usunięto projektu' });
+      } else {
+        res.status(200).json({ message: 'Projekt usunięty' });
+      }
+    });
+  } catch (error) {
+    console.error('Nie usunięto projektu:', error);
+    res.status(500).json({ error: 'Nie usunięto projektu' });
+  }
+});
+
 app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
   const authHeader = req.headers.authorization;
@@ -547,7 +566,7 @@ app.get('/members', (req, res) => {
   const col = sortCol || 'imie';
   const order = sortOrd === 'DESC' ? 'DESC' : 'ASC';
 
-  const membersQuery = `SELECT uzytkownik_id, imie, nazwisko nazw, typ_konta status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik ORDER BY ${col} ${order};`;
+  const membersQuery = `SELECT uzytkownik_id, imie, nazwisko nazw, status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik ORDER BY ${col} ${order};`;
 
   db.query(membersQuery, (error, results) => {
     if (error) {
@@ -773,7 +792,7 @@ app.get('/profil', verifyAccessToken, (req, res) => {
     return res.status(401).json({ error: 'Brak tokena' });
   }
 
-  const sql = "SELECT u.email, u.imie, u.nazwisko, DATE_FORMAT(u.data_urodzenia, '%d-%m-%Y') AS data_urodzenia, u.plec, u.typ_konta, COUNT(pu.projekt_id) AS liczba_projektow " +
+  const sql = "SELECT u.email, u.imie, u.nazwisko, DATE_FORMAT(u.data_urodzenia, '%d-%m-%Y') AS data_urodzenia, u.plec, COUNT(pu.projekt_id) AS liczba_projektow " +
               "FROM uzytkownik u LEFT JOIN projekty_uzytkownik pu ON u.uzytkownik_id = pu.uzytkownik_id WHERE u.email = ? GROUP BY u.uzytkownik_id;";
 
   db.query(sql, [userEmail], (err, data) => {

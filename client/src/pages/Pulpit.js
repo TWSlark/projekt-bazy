@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Progress, Modal, Button } from 'antd';
-import { PlusCircleOutlined } from '@ant-design/icons';
+import { PlusCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 const Pulpit = () => {
   const [projects, setProjects] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -19,6 +21,21 @@ const Pulpit = () => {
 
   const handleCancel = () => {
     setIsModalOpen(false);
+  };
+
+  const visibleModal = (projectId) => {
+    setSelectedProjectId(projectId);
+    setIsModalVisible(true);
+  };
+
+  const handleOkModal = () => {
+    deleteProject(selectedProjectId);
+    setIsModalVisible(false);
+  };
+
+  const handleCancelModal = () => {
+    setSelectedProjectId(null);
+    setIsModalVisible(false);
   };
 
   useEffect(() => {
@@ -77,6 +94,27 @@ const Pulpit = () => {
     }
   };
 
+  const deleteProject = async (projectId) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:5000/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Nie udało się usunąć projektu');
+      }
+
+      fetchProjects();
+    } catch (error) {
+      console.error("Błąd przy usuwaniu projektu:", error);
+    }
+  }
+
   return (
     <div className='content'>
       <div className='contentTop'>
@@ -96,13 +134,16 @@ const Pulpit = () => {
         <Row gutter={[16, 16]}>
           {projects.map(project => (
             <Col key={project.projekt_id}>
-              <Link to={`/projekt/${project.projekt_id}`} className="project-link">
-                <div className='progressBox'>
-                  <h2>{project.tytul}</h2>
-                  <Progress type="circle" percent={project.wynik} />
-                </div>
-              </Link>
-            </Col>
+            <div className='progressBox'>
+              <h2>{project.tytul}</h2>
+              <Progress type="circle" percent={project.wynik} />
+              <Button type="secondary" onClick={() => visibleModal(project.projekt_id)} icon={<MinusCircleOutlined />} />
+              <Modal title="Usuwanie zadania" open={isModalVisible} onOk={handleOkModal} onCancel={handleCancelModal}>
+                <p>Czy na pewno chcesz usunąć to zadanie?</p>
+              </Modal>
+              <Link to={`/projekt/${project.projekt_id}`} className="project-link"></Link>
+            </div>
+          </Col>
           ))}
         </Row>
       </div>
