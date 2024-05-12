@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {  Button, Input, Space  } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
@@ -8,18 +8,45 @@ import { message, Upload } from 'antd';
 const { Dragger } = Upload;
 
 const Zadanie = () => {
+  const navigate = useNavigate();
   const { projectId, taskId } = useParams();
   const [task, setTask] = useState({});
   const [comments, setComm] = useState([]);
   const [newComm, setNewComm] = useState('');
   const [pliki, setPlik] = useState([]);
   const [listaPlikow, setListaPlikow] = useState([]);
+  const [isUserAssociated, setIsUserAssociated] = useState(false);
   
   useEffect(() => {
+    isUserAssigned();
+    if (!isUserAssociated) {
+      navigate('/pulpit');
+    }
     fetchTask(projectId, taskId);
     fetchComm(taskId);
-    fetchPliki(taskId)
-  }, [projectId, taskId,comments]);
+    fetchPliki(taskId);
+  }, [projectId, taskId, comments]);
+
+  const isUserAssigned = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:5000/isAssociated/${projectId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        setIsUserAssociated(true);
+      } else {
+        setIsUserAssociated(false);
+      }
+    } catch (error) {
+      console.error('Błąd przy sprawdzaniu przypisania użytkownika do projektu', error);
+    }
+  };
 
   const fetchTask = async (projectId, taskId) => {
       const accessToken = localStorage.getItem('accessToken');

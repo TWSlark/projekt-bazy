@@ -158,7 +158,7 @@ app.post('/login', (req, res) => {
 app.get('/verify', (req, res) => {
   const { hashToken } = req.query;
   console.log(hashToken);
-  const searchSql = "SELECT * FROM uzytkownik WHERE `token` = ?"
+  const searchSql = "SELECT email FROM uzytkownik WHERE `token` = ?"
 
   db.query(searchSql,[hashToken], (err,result)=>{
     if (err) {
@@ -216,7 +216,7 @@ app.post('/refresh-token', (req, res) => {
 
     const email = decoded.email;
 
-    const checkRefreshToken = "SELECT * FROM uzytkownik WHERE email = ? AND refreshToken = ?";
+    const checkRefreshToken = "SELECT active FROM uzytkownik WHERE email = ? AND refreshToken = ?";
     db.query(checkRefreshToken, [email, refreshToken], (checkErr, checkResult) => {
       if (checkErr) {
         return res.status(500).json({ error: 'Problem z bazą - refreshToken' });
@@ -284,6 +284,37 @@ app.get('/manager', verifyAccessToken, async (req, res) => {
   } catch (error) {
     console.error('Internal server error z /projects', error);
     res.status(500).json({ error: 'Internal server error z /projects' });
+  }
+});
+
+app.get('/isAssosiated', verifyAccessToken, async (req, res) => {
+  const { projectId } = req.params;
+  const authHeader = req.headers.authorization;
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+
+  try {
+    const user = await Uzytkownik.findOne({ where: { email: userEmail } });
+    if (!user) {
+      return res.status(404).json({ error: 'Nie znaleziono użytkownika' });
+    }
+
+    const isUserAssignedToProject = await ProjektyUzytkownik.findOne({
+      where: {
+        projekt_id: projectId,
+        uzytkownik_id: user.uzytkownik_id,
+      },
+    });
+
+    res.json({ isAssociated: !!isUserAssignedToProject });
+  } catch (error) {
+    console.error('Internal server error z /isAssociated/:projectId', error);
+    res.status(500).json({ error: 'Internal server error z /isAssociated/:projectId' });
   }
 });
 
@@ -835,7 +866,7 @@ app.post('/requestNewPass', (req, res) => {
   const {email} = req.body;
   console.log(email);
   
-  const sql = 'SELECT * FROM uzytkownik WHERE email = ?;';
+  const sql = 'SELECT email FROM uzytkownik WHERE email = ?;';
 
   db.query(sql,[email],(err,result)=>{
     if (err) {
@@ -858,7 +889,7 @@ app.post('/requestNewPass', (req, res) => {
       if (err) {
         console.log(err);
       }
-      const sql = "Update uzytkownik set passToken = ? WHERE email = ?;";
+      const sql = "UPDATE uzytkownik SET passToken = ? WHERE email = ?;";
 
       db.query(sql, [hashedToken,userEmail], (err,data) => {
         if (err) {

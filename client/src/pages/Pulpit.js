@@ -135,13 +135,14 @@ const Pulpit = () => {
           {projects.map(project => (
             <Col key={project.projekt_id}>
             <div className='progressBox'>
-              <h2>{project.tytul}</h2>
+              <Link to={`/projekt/${project.projekt_id}`} className="project-link">
+                <h2>{project.tytul}</h2>
+              </Link>
               <Progress type="circle" percent={project.wynik} />
               <Button type="secondary" onClick={() => visibleModal(project.projekt_id)} icon={<MinusCircleOutlined />} />
               <Modal title="Usuwanie zadania" open={isModalVisible} onOk={handleOkModal} onCancel={handleCancelModal}>
                 <p>Czy na pewno chcesz usunąć to zadanie?</p>
               </Modal>
-              <Link to={`/projekt/${project.projekt_id}`} className="project-link"></Link>
             </div>
           </Col>
           ))}

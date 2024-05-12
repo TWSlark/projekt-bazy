@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Modal, Button, Avatar, Tooltip } from 'antd';
 
@@ -31,7 +31,7 @@ const Task = ({ id, title, description, status, onMoveTask, onDeleteTask,project
 
   return (
     <div className="task" ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
-      <Link to={`/projekt/${projectId}/zadanie/${id}`}>
+      <Link to={`/projekt/${projectId}/zadanie/${id}`} className="project-link">
         <h3>{title}</h3>
       </Link>
       <p>{description}</p>
@@ -47,11 +47,13 @@ const Task = ({ id, title, description, status, onMoveTask, onDeleteTask,project
 
 const Projekt = () => {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState(null);
+  const [isUserAssociated, setIsUserAssociated] = useState(false);
 
   const showDeleteModal = (userId) => {
     setUserIdToDelete(userId);
@@ -84,8 +86,33 @@ const Projekt = () => {
   };
 
   useEffect(() => {
+    isUserAssigned();
+    if (!isUserAssociated) {
+      navigate('/pulpit');
+    }
     fetchTasks();
-  }, [projectId]);
+  }, [projectId, isUserAssociated]);
+
+  const isUserAssigned = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:5000/isAssociated/${projectId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        setIsUserAssociated(true);
+      } else {
+        setIsUserAssociated(false);
+      }
+    } catch (error) {
+      console.error('Błąd przy sprawdzaniu przypisania użytkownika do projektu', error);
+    }
+  };
 
   const fetchTasks = async () => {
     try {
