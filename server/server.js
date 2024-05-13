@@ -877,15 +877,16 @@ app.post('/requestNewPass', (req, res) => {
   const {email} = req.body;
   console.log(email);
   
-  const sql = 'SELECT email FROM uzytkownik WHERE email = ?;';
+  const sql = "SELECT IsUser(?) as IsUser;";
 
   db.query(sql,[email],(err,result)=>{
     if (err) {
       console.error('Błąd pobierania użytkownika', err);
-    }
+    } 
 
-    if (result.length === 0) {
+    if (result[0].IsUser === 0) {
       console.error('Użytkownik nie znaleziony');
+      return res.status(404);
     }
 
     bcrypt.genSalt(10, (err, salt)=>{
@@ -893,7 +894,7 @@ app.post('/requestNewPass', (req, res) => {
         console.log("Błąd generowania soli", err);
         return;
       }
-    const userEmail = result[0].email;
+    const userEmail = email;
     const token = jwt.sign({email: userEmail},tokenKey,{ expiresIn: '30min' });
 
     bcrypt.hash(token, salt, (err,hashedToken) =>{

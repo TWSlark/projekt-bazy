@@ -77,6 +77,11 @@ const Profil = () => {
             })
         } catch (error) {
             console.error('Blad przy requescie zmiany hasła', error);
+            if (error.response && error.response.status === 404) {
+                alert('Użytkownik o podanym mailu nie istnieje');
+              } else {
+                console.error('Błąd przy requescie zmiany hasła', error);
+              }
         }
         setIsModalOpen(false);
     };

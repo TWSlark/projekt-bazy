@@ -8,32 +8,24 @@ function ZmianaHasla() {
         newHaslo:''
     });
 
-    const [err, setErr] = useState({})
 
     const handleInput = (e) => {
         setDane(prev => ({...prev, [e.target.name]: e.target.value}));
     };
 
-    function validNewPass(dane) {
-        let error = {}
+    function validNewPass() {
         const passRe = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()-+=])[A-Za-z\d!@#$%^&*()-+=]{8,}$/;
 
         if (!passRe.test(dane.haslo)) {
-            error.password = "Hasło nie spełnia wymagań"
+            alert("Hasło nie spełnia wymagań")
+            return false;
+        }else if (dane.haslo !== dane.newHaslo) {
+            alert("Hasła nie są ze sobą zgodne")
+            return false;
         }
-        else {
-            error.password = "";
-        }
-
-        if (dane.haslo !== dane.newHaslo) {
-            error.newpassword = "Hasła się nie zgadzają"
-        }
-        else {
-            error.newpassword = "";
-        }
-    
-        return error;
+        return true;
     }
+
     const showAlert = () => {
         alert("Hasło zostało zmienione");
         window.location.href="http://localhost:3000";
@@ -41,10 +33,11 @@ function ZmianaHasla() {
 
     const handleSubmit = async (e) =>{
         e.preventDefault();
-        setErr(validNewPass(dane));
+    
         const accessToken = localStorage.getItem('accessToken');
         
-        try {
+        if(validNewPass(dane)){
+            try {
             const response = await axios.post(`http://localhost:5000/newPass`, dane, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -61,16 +54,14 @@ function ZmianaHasla() {
             console.log('response: ', response);
         } catch(err){
             console.error("Błąd przy dodawaniu zadania", err);
-        }
+        }}
     };
 
     return (
         <div className='verify-container'>
             <form method='POST' onSubmit={handleSubmit}>
                 <input type='password' id='newPass' name='haslo' onChange={handleInput} placeholder='Podaj nowe hasło'/>
-                {err.password && <p> {err.password}</p>}
                 <input type='password' id='reEntry' name='newHaslo' onChange={handleInput} placeholder='Podaj ponownie nowe hasło'/>
-                {err.newpassword && <p> {err.newpassword}</p>}
                 <button type='submit'>Zaktualizuj Hasło</button>
             </form>
         </div>
