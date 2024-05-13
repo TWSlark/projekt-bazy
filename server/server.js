@@ -639,18 +639,38 @@ app.post('/assign', (req, res) => {
 app.delete('/assign/:projectId/:userId', verifyAccessToken, (req, res) => {
   const { projectId, userId } = req.params;
 
-  const deleteQuery = 'DELETE FROM projekty_uzytkownik WHERE projekt_id = ? AND uzytkownik_id = ?';
+  let email;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    email = decoded.email;
+  }
 
-  db.query(deleteQuery, [projectId, userId], (error, results) => {
+  const isManagerQuery = 'SELECT manager FROM projekty_uzytkownik WHERE projekt_id = ? AND uzytkownik_id = (SELECT uzytkownik_id FROM uzytkownik WHERE email = ?)';
+
+  db.query(isManagerQuery, [projectId, email], (error, results) => {
     if (error) {
-      console.error('Błąd usuwania użytkownika z projektu', error);
-      res.status(500).json({ error: 'Błąd usuwania użytkownika z projektu' });
-    } else {
-      res.status(200).json({ message: 'Udane usunięcie użytkownika z projektu' });
+      console.error('Błąd sprawdzania czy użytkownik jest managerem projektu', error);
+      return res.status(500).json({ error: 'Błąd sprawdzania czy użytkownik jest managerem projektu' });
     }
+
+    if (results.length === 0 || results[0].manager !== 1) {
+      return res.status(403).json({ error: 'Brak uprawnień do usunięcia użytkownika z projektu' });
+    }
+
+    const deleteQuery = 'DELETE FROM projekty_uzytkownik WHERE projekt_id = ? AND uzytkownik_id = ?';
+
+    db.query(deleteQuery, [projectId, userId], (error, results) => {
+      if (error) {
+        console.error('Błąd usuwania użytkownika z projektu', error);
+        res.status(500).json({ error: 'Błąd usuwania użytkownika z projektu' });
+      } else {
+        res.status(200).json({ message: 'Udane usunięcie użytkownika z projektu' });
+      }
+    });
   });
 });
-
 
 app.get('/zadania', verifyAccessToken, async (req, res) => {
   try {
