@@ -4,8 +4,9 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Modal, Button, Avatar, Tooltip } from 'antd';
+import socketIOClient from 'socket.io-client';
 
-const Task = ({ id, title, description, status, priority, onMoveTask, onDeleteTask, projectId }) => {
+const Task = ({ id, title, description, status, priority, assignedUser, onMoveTask, onDeleteTask, projectId }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -13,6 +14,21 @@ const Task = ({ id, title, description, status, priority, onMoveTask, onDeleteTa
       isDragging: monitor.isDragging(),
     }),
   });
+
+  const stringToColor = (str) => {
+    let hash = 0;
+    str.split('').forEach(char => {
+        hash = char.charCodeAt(0) + ((hash << 5) - hash)
+    })
+    let color = '#'
+    for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xff
+        color += value.toString(16).padStart(2, '0')
+    }
+    return color
+};
+
+  console.log(assignedUser);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -34,14 +50,23 @@ const Task = ({ id, title, description, status, priority, onMoveTask, onDeleteTa
       <Link to={`/projekt/${projectId}/zadanie/${id}`} className="project-link">
         <h3>{title}</h3>
       </Link>
+      <div className="priority">{priority}</div>
       <p>{description}</p>
-      <p>{priority}</p>
       <Button type="primary" onClick={showModal} icon={<MinusCircleOutlined />}>
         Usuń
       </Button>
       <Modal title="Usuwanie zadania" open={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
         <p>Czy na pewno chcesz usunąć to zadanie?</p>
       </Modal>
+      <div className="assignedUser">
+        {assignedUser && (
+          <Tooltip title={`${assignedUser.imie} ${assignedUser.nazwisko}`} placement="top">
+            <Avatar style={{ backgroundColor: stringToColor(assignedUser.imie || '') }}>
+              {assignedUser.imie.charAt(0).toUpperCase()}
+            </Avatar>
+          </Tooltip>
+        )}
+      </div>
     </div>
   );
 };
@@ -87,6 +112,15 @@ const Projekt = () => {
 
   useEffect(() => {
     isUserAssigned();
+
+    const socket = socketIOClient('http://localhost:4000');
+
+    socket.on('taskUpdate', (data) => {
+      console.log('Task update received:', data);
+      fetchTasks();
+    });
+
+    return () => socket.disconnect();
   }, [projectId]);
 
   const isUserAssigned = async () => {
@@ -129,7 +163,11 @@ const Projekt = () => {
       });
 
       const data = await response.json();
-      setTasks(data.tasks);
+      const assignedUsers = data.tasks.map(task => ({
+        ...task,
+        assignedUser: data.users.find(user => user.uzytkownik_id === task.uzytkownik_id),
+      }));
+      setTasks(assignedUsers);
       setUsers(data.users);
     } catch (error) {
       console.error('Blad przy pobieraniu zadan', error);
@@ -297,7 +335,7 @@ const Projekt = () => {
       <div ref={drop} className="drag-container" data-status={status}>
         <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
-          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} projectId={projectId} onDeleteTask={deleteTask} />
+          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} assignedUser={task.assignedUser} projectId={projectId} onDeleteTask={deleteTask} />
         ))}
       </div>
     );

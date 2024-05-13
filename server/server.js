@@ -12,6 +12,22 @@ const Sequelize = require('sequelize');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const http = require('http');
+
+const server = http.createServer();
+const io = require('socket.io')(server, {
+  cors: {
+    origin: '*',
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
 
 const tokenKey = process.env.TOKENKEY;
 
@@ -409,7 +425,7 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
       userEmail = decoded.email;
     }
 
-  const usersQuery = 'SELECT uzytkownik_id, imie, nazwisko FROM uzytkownik WHERE uzytkownik_id IN (SELECT uzytkownik_id FROM projekty_uzytkownik WHERE projekt_id = ?) AND email != ?';
+  const usersQuery = 'SELECT uzytkownik_id, imie, nazwisko FROM uzytkownik WHERE uzytkownik_id IN (SELECT uzytkownik_id FROM projekty_uzytkownik WHERE projekt_id = ?)';
 
   db.query(usersQuery, [projectId, userEmail], (error, usersData) => {
     if (error) {
@@ -423,7 +439,7 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
           console.error('Blad pobierania zadan', error);
           res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
         } else {
-          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy }));
+          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy, uzytkownik_id: task.uzytkownik_id }));
           res.json({ tasks, users });
         }
       });
@@ -451,6 +467,7 @@ app.put('/tasks/:taskId', verifyAccessToken, (req, res) => {
       console.error('Blad aktualizacji statusu zadania', error);
       res.status(500).json({ error: 'Internal Server Error z /tasks/:taskID' });
     } else {
+      io.emit('taskUpdate', { action: 'create/update/delete' });
       res.status(200).json({ message: 'Udana aktualizacja statusu zadania' });
     }
   });
@@ -467,6 +484,7 @@ app.post('/tasks/:projectId', verifyAccessToken, (req, res) => {
       console.error('Blad dodawania zadania', error);
       res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
     } else {
+      io.emit('taskUpdate', { action: 'create/update/delete' });
       res.status(200).json({ message: 'Udane dodanie zadania' });
     }
   });
@@ -482,6 +500,7 @@ app.delete('/tasks/:taskId', verifyAccessToken, (req, res) => {
       console.error('Blad usuwania zadania', error);
       res.status(500).json({ error: 'Internal Server Error z /tasks/:taskId' });
     } else {
+      io.emit('taskUpdate', { action: 'create/update/delete' });
       res.status(200).json({ message: 'Udane usuniecie zadania' });
     }
   });
@@ -968,7 +987,9 @@ app.post('/newPass', (req, res) => {
       });
     })
 
-
+server.listen(4000, () => {
+  console.log('Server is running on port 4000');
+});
 
 
 app.listen(5000, () => {
