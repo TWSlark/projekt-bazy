@@ -287,7 +287,7 @@ app.get('/manager', verifyAccessToken, async (req, res) => {
   }
 });
 
-app.get('/isAssosiated', verifyAccessToken, async (req, res) => {
+app.get('/isAssociated/:projectId', verifyAccessToken, async (req, res) => {
   const { projectId } = req.params;
   const authHeader = req.headers.authorization;
 
@@ -298,24 +298,16 @@ app.get('/isAssosiated', verifyAccessToken, async (req, res) => {
     userEmail = decoded.email;
   }
 
-  try {
-    const user = await Uzytkownik.findOne({ where: { email: userEmail } });
-    if (!user) {
-      return res.status(404).json({ error: 'Nie znaleziono użytkownika' });
+  querry = 'SELECT * FROM projekty_uzytkownik WHERE projekt_id = ? AND uzytkownik_id = (SELECT uzytkownik_id FROM uzytkownik WHERE email = ?)';
+
+  db.query(querry, [projectId, userEmail], (error, results) => {
+    if (error) {
+      console.error('Blad sprawdzania przypisania uzytkownika do projektu', error);
+      res.status(500).json({ error: 'Internal Server Error z /isAssociated/:projectId' });
+    } else {
+      res.json({ isAssociated: results.length > 0 });
     }
-
-    const isUserAssignedToProject = await ProjektyUzytkownik.findOne({
-      where: {
-        projekt_id: projectId,
-        uzytkownik_id: user.uzytkownik_id,
-      },
-    });
-
-    res.json({ isAssociated: !!isUserAssignedToProject });
-  } catch (error) {
-    console.error('Internal server error z /isAssociated/:projectId', error);
-    res.status(500).json({ error: 'Internal server error z /isAssociated/:projectId' });
-  }
+  });
 });
 
 app.get('/projects', verifyAccessToken, async (req, res) => {
@@ -597,7 +589,7 @@ app.get('/members', (req, res) => {
   const col = sortCol || 'imie';
   const order = sortOrd === 'DESC' ? 'DESC' : 'ASC';
 
-  const membersQuery = `SELECT uzytkownik_id, imie, nazwisko nazw, status, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik ORDER BY ${col} ${order};`;
+  const membersQuery = `SELECT uzytkownik_id, imie, nazwisko nazw, YEAR(CURRENT_DATE) - YEAR(data_urodzenia) wiek from uzytkownik ORDER BY ${col} ${order};`;
 
   db.query(membersQuery, (error, results) => {
     if (error) {

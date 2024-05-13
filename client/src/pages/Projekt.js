@@ -5,7 +5,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Modal, Button, Avatar, Tooltip } from 'antd';
 
-const Task = ({ id, title, description, status, onMoveTask, onDeleteTask,projectId }) => {
+const Task = ({ id, title, description, status, priority, onMoveTask, onDeleteTask, projectId }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -35,6 +35,7 @@ const Task = ({ id, title, description, status, onMoveTask, onDeleteTask,project
         <h3>{title}</h3>
       </Link>
       <p>{description}</p>
+      <p>{priority}</p>
       <Button type="primary" onClick={showModal} icon={<MinusCircleOutlined />}>
         Usuń
       </Button>
@@ -53,7 +54,6 @@ const Projekt = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState(null);
-  const [isUserAssociated, setIsUserAssociated] = useState(false);
 
   const showDeleteModal = (userId) => {
     setUserIdToDelete(userId);
@@ -87,11 +87,7 @@ const Projekt = () => {
 
   useEffect(() => {
     isUserAssigned();
-    if (!isUserAssociated) {
-      navigate('/pulpit');
-    }
-    fetchTasks();
-  }, [projectId, isUserAssociated]);
+  }, [projectId]);
 
   const isUserAssigned = async () => {
     try {
@@ -104,11 +100,18 @@ const Projekt = () => {
         },
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setIsUserAssociated(true);
+        if (data.isAssociated) {
+          fetchTasks();
+        } else {
+          navigate('/pulpit');
+        }
       } else {
-        setIsUserAssociated(false);
+        throw new Error('Nie udało się sprawdzić przypisania użytkownika do projektu');
       }
+      
     } catch (error) {
       console.error('Błąd przy sprawdzaniu przypisania użytkownika do projektu', error);
     }

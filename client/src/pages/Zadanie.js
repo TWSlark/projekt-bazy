@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import {  Button, Input, Space  } from 'antd';
+import { Input } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import { message, Upload } from 'antd';
 
@@ -15,16 +15,9 @@ const Zadanie = () => {
   const [newComm, setNewComm] = useState('');
   const [pliki, setPlik] = useState([]);
   const [listaPlikow, setListaPlikow] = useState([]);
-  const [isUserAssociated, setIsUserAssociated] = useState(false);
   
   useEffect(() => {
     isUserAssigned();
-    if (!isUserAssociated) {
-      navigate('/pulpit');
-    }
-    fetchTask(projectId, taskId);
-    fetchComm(taskId);
-    fetchPliki(taskId);
   }, [projectId, taskId, comments]);
 
   const isUserAssigned = async () => {
@@ -38,11 +31,20 @@ const Zadanie = () => {
         },
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setIsUserAssociated(true);
+        if (data.isAssociated) {
+          fetchTask(projectId, taskId);
+          fetchComm(taskId);
+          fetchPliki(taskId);
+        } else {
+          navigate('/pulpit');
+        }
       } else {
-        setIsUserAssociated(false);
+        throw new Error('Nie udało się sprawdzić przypisania użytkownika do projektu');
       }
+      
     } catch (error) {
       console.error('Błąd przy sprawdzaniu przypisania użytkownika do projektu', error);
     }
