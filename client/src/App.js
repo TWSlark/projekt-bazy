@@ -61,18 +61,10 @@ const MainLayout = () => {
     });
 
     socket.on('refreshToken', () => {
-      console.log('Token refreshed');
+      //console.log('Token refreshed');
       refreshAccessToken();
     });
   }, []);
-
-  useEffect(() => {
-    const tokenExpiration = localStorage.getItem('tokenExpiration');
-    const currentTime = new Date().getTime();
-    if (currentTime > parseInt(tokenExpiration)) {
-      refreshAccessToken();
-    }
-  }, [accessToken, navigate, window.location.pathname]);
 
   const fetchProjects = async () => {
     try {
@@ -118,9 +110,7 @@ const MainLayout = () => {
       .then(data => {
         const newAccessToken = data.accessToken;
         localStorage.setItem('accessToken', newAccessToken);
-        const tokenExpiration = new Date().getTime() + 300000;
-        localStorage.setItem('tokenExpiration', tokenExpiration);
-        console.log('Odświeżono accessToken');
+        //console.log('Odświeżono accessToken');
         setAccessToken(newAccessToken);
       })
       .catch(error => {

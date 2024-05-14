@@ -28,8 +28,6 @@ const Task = ({ id, title, description, status, priority, ostatniaZmiana, assign
     return color
 };
 
-  console.log(assignedUser);
-
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const showModal = () => {
@@ -117,7 +115,7 @@ const Projekt = () => {
     const socket = socketIOClient('http://localhost:4000');
 
     socket.on('taskUpdate', (data) => {
-      console.log('Task update received:', data);
+      //console.log('Task update received:', data);
       fetchTasks();
     });
 

@@ -21,7 +21,7 @@ const Kalendarz = () => {
       });
 
       const data = await response.json();
-      console.log(data);
+      //console.log(data);
       setDates(data);
 
     } catch (error) {

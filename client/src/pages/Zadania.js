@@ -4,7 +4,6 @@ import { SortAscendingOutlined, DownOutlined, SortDescendingOutlined,
   ArrowDownOutlined, ArrowUpOutlined, AlignLeftOutlined } from '@ant-design/icons';
 import { Button, Dropdown,  Space  } from 'antd';
 
-
 const Zadania = () => {
 
   // const [zadania, setZadania] = useState([]);
@@ -46,8 +45,8 @@ const Zadania = () => {
     }
   };
   
-  console.table(zadania);
-  console.table(projekty);
+  //console.table(zadania);
+  //console.table(projekty);
 
   const handleMenuClick = (e) => {
     const sortOpt = {
