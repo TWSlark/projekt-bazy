@@ -214,6 +214,7 @@ const verifyAccessToken = (req, res, next) => {
       return res.status(403).json({ error: 'Nieprawidłowy accessToken' });
     }
     req.user = decoded;
+    io.emit('refreshToken');
     next();
   });
 };
@@ -387,6 +388,7 @@ app.post('/projects', async (req, res) => {
       }
     }
 
+    io.emit('projectUpdate');
     res.status(201).json(newProject);
   } catch (error) {
     console.error('Nie stworzono projektu:', error);
@@ -434,12 +436,12 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
     } else {
       const users = usersData.map(user => ({ uzytkownik_id: user.uzytkownik_id, imie: user.imie, nazwisko: user.nazwisko}));
       
-      db.query('SELECT * FROM zadania WHERE projekt_id = ?', [projectId], (error, tasksData, fields) => {
+      db.query("SELECT *, DATE_FORMAT(ostatniaZmiana, '%d.%m.%Y %H:%i') as ostatniaZmiana FROM zadania WHERE projekt_id = ?", [projectId], (error, tasksData, fields) => {
         if (error) {
           console.error('Blad pobierania zadan', error);
           res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
         } else {
-          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy, uzytkownik_id: task.uzytkownik_id }));
+          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy, ostatniaZmiana: task.ostatniaZmiana, uzytkownik_id: task.uzytkownik_id }));
           res.json({ tasks, users });
         }
       });

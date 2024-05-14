@@ -4,6 +4,7 @@ import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, 
   BookOutlined, DownOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Layout, Menu, Button, Space, Dropdown, Avatar } from 'antd';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom';
+import socketIOClient from 'socket.io-client';
 
 import ProtectedRoute from './ProtectedRoute';
 import Pulpit from './pages/Pulpit';
@@ -51,6 +52,18 @@ const MainLayout = () => {
   useEffect(() => {
     fetchProjects();
     getProfile();
+
+    const socket = socketIOClient('http://localhost:4000');
+
+    socket.on('projectUpdate', () => {
+      console.log('Project update received:');
+      fetchProjects();
+    });
+
+    socket.on('refreshToken', () => {
+      console.log('Token refreshed');
+      refreshAccessToken();
+    });
   }, []);
 
   useEffect(() => {
