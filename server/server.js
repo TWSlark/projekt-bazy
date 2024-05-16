@@ -259,15 +259,59 @@ app.put('/logout', (req, res) => {
       userEmail = decoded.email;
     }
 
-  const sql = "UPDATE uzytkownik SET refreshToken = NULL WHERE email = ?"
+    db.beginTransaction((err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Internal server error z /logout' });
+      }
 
-  db.query(sql,[userEmail], (err,result)=>{
-    if (err) {
-      console.error('Błąd usuwania refreshToken:', error);
-      return res.status(500).json({ error: 'Błąd serwera podczas wylogowywania' });
-    }
-    res.status(200).json({ message: 'Jest git' });
-  })
+      const uzytkownikQuerry = "SELECT uzytkownik_id FROM uzytkownik WHERE email = ?";
+      db.query(uzytkownikQuerry, [userEmail], (err, result) => {
+        if (err) {
+          return db.rollback(() => {
+            res.status(500).json({ error: 'Internal server error z /logout' });
+          });
+        }
+
+        if (result.length > 0) {
+          const uzytkownikId = result[0].uzytkownik_id;
+  
+          const updateRefreshTokenSql = "UPDATE uzytkownik SET refreshToken = NULL WHERE email = ?";
+          db.query(updateRefreshTokenSql, [userEmail], (err, result) => {
+            if (err) {
+              return db.rollback(() => {
+                console.error('logout uzytkownik', err);
+                res.status(500).json({ error: 'Internal server error z /logout' });
+              });
+            }
+  
+            const updateTaskStatusSql = "UPDATE zadania SET status = 'Do zrobienia' WHERE status = 'Trwajace' AND uzytkownik_id = ?";
+            db.query(updateTaskStatusSql, [uzytkownikId], (err, result) => {
+              if (err) {
+                return db.rollback(() => {
+                  console.error('logout zadania', err);
+                  res.status(500).json({ error: 'Internal server error z /logout' });
+                });
+              }
+  
+              db.commit((err) => {
+                if (err) {
+                  return db.rollback(() => {
+                    console.error('Nie udalo sie przepowadzic transakcji:', err);
+                    res.status(500).json({ error: 'Internal server error z /logout' });
+                  });
+                }
+                io.emit('taskUpdate', { action: 'create/update/delete' });
+                res.status(200).json({ message: 'Jest git' });
+              });
+            });
+          });
+        } else {
+          db.rollback(() => {
+            res.status(404).json({ error: 'Nie znaleziono uzytkownika' });
+          });
+        }
+      });
+    });
 });
 
 app.get('/manager', verifyAccessToken, async (req, res) => {
@@ -436,12 +480,12 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
     } else {
       const users = usersData.map(user => ({ uzytkownik_id: user.uzytkownik_id, imie: user.imie, nazwisko: user.nazwisko}));
       
-      db.query("SELECT *, DATE_FORMAT(ostatniaZmiana, '%d.%m.%Y %H:%i') as ostatniaZmiana FROM zadania WHERE projekt_id = ?", [projectId], (error, tasksData, fields) => {
+      db.query("SELECT * FROM zadania WHERE projekt_id = ?", [projectId], (error, tasksData, fields) => {
         if (error) {
           console.error('Blad pobierania zadan', error);
           res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
         } else {
-          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy, ostatniaZmiana: task.ostatniaZmiana, uzytkownik_id: task.uzytkownik_id }));
+          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy, uzytkownik_id: task.uzytkownik_id }));
           res.json({ tasks, users });
         }
       });
@@ -538,7 +582,7 @@ app.put('/tasks/:taskId/unassign', verifyAccessToken, async (req, res) => {
   const { taskId } = req.params;
 
   try {
-    const updateQuery = 'UPDATE zadania SET uzytkownik_id = NULL, rozpoczecie_pracy = NULL, zakonczenie_pracy = NULL WHERE zadanie_id = ?';
+    const updateQuery = 'UPDATE zadania SET rozpoczecie_pracy = NULL, zakonczenie_pracy = NULL WHERE zadanie_id = ?';
     db.query(updateQuery, [taskId]);
 
     res.status(200).json({ message: 'Reset przypisane do uzytkownika' });

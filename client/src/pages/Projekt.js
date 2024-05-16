@@ -6,7 +6,7 @@ import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Modal, Button, Avatar, Tooltip } from 'antd';
 import socketIOClient from 'socket.io-client';
 
-const Task = ({ id, title, description, status, priority, ostatniaZmiana, assignedUser, onMoveTask, onDeleteTask, projectId }) => {
+const Task = ({ id, title, description, status, priority, assignedUser, onMoveTask, onDeleteTask, projectId }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -50,7 +50,6 @@ const Task = ({ id, title, description, status, priority, ostatniaZmiana, assign
       </Link>
       <div className="priority">{priority}</div>
       <p>{description}</p>
-      <p>Ostatnia zmiana: {ostatniaZmiana}</p>
       <Button type="primary" onClick={showModal} icon={<MinusCircleOutlined />}>
         Usuń
       </Button>
@@ -334,7 +333,7 @@ const Projekt = () => {
       <div ref={drop} className="drag-container" data-status={status}>
         <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
-          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} ostatniaZmiana={task.ostatniaZmiana} assignedUser={task.assignedUser} projectId={projectId} onDeleteTask={deleteTask} />
+          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} assignedUser={task.assignedUser} projectId={projectId} onDeleteTask={deleteTask} />
         ))}
       </div>
     );
