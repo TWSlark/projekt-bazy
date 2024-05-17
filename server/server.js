@@ -1054,6 +1054,21 @@ app.post('/newPass', (req, res) => {
       });
     })
 
+app.get('/time/:taskId', verifyAccessToken, (req, res) => {
+  const taskId = req.params.taskId;
+
+  const procedure = 'call czas(?);';
+
+  db.query(procedure, [taskId], (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania czasów użytkowników', error);
+    } else {
+      res.status(200).json(results);
+    }
+  });
+});   
+    
+
 server.listen(4000, () => {
   console.log('Server is running on port 4000');
 });

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Input } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import { message, Upload } from 'antd';
+import { message, Upload, Button, Modal, Input} from 'antd';
 
 const { Dragger } = Upload;
 
@@ -15,6 +14,7 @@ const Zadanie = () => {
   const [newComm, setNewComm] = useState('');
   const [pliki, setPlik] = useState([]);
   const [listaPlikow, setListaPlikow] = useState([]);
+  const [times, setTimes] = useState([]);
   
   useEffect(() => {
     isUserAssigned();
@@ -38,6 +38,7 @@ const Zadanie = () => {
           fetchTask(projectId, taskId);
           fetchComm(taskId);
           fetchPliki(taskId);
+          fetchUserTime(taskId);
         } else {
           navigate('/pulpit');
         }
@@ -145,7 +146,77 @@ const addComm = async(e) => {
     },
   };
 
+  const fetchUserTime= async (taskId) => {
+    const accessToken = localStorage.getItem('accessToken');
+  try {
+  
+    const response = await axios.get(`http://localhost:5000/time/${taskId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    setTimes(response.data[0]);
+  } catch (error) {
+    console.error('Blad przy pobieraniu czasu użytkowników', error);
+  }
+  };
+
 const zadanie = task;
+
+const totalTime = (times) => {
+  let totalTimeText = '';
+  const totalSeconds = times.reduce((total, time) => total + Number(time.suma), 0);
+  console.log('totalSeconds: ', totalSeconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    totalTimeText += `${hours} godzin${hours > 1 ? '' : 'ę'}`;
+  }
+  if (minutes > 0) {
+    totalTimeText += ` ${minutes} minut${minutes > 1 ? '' : 'ę'}`;
+  }
+  if (seconds > 0 || (hours === 0 && minutes === 0)) {
+    totalTimeText += ` ${seconds} sekund${seconds > 1 ? '' : 'ę'}`;
+  }
+  return totalTimeText;
+};
+const totalTimeText = `Łączny czas pracy przez użytkowników: ${totalTime(times)}`
+const info = () => {
+  Modal.info({
+    title: 'Raport czasu pracy',
+    content: (
+      <>
+      <div className='usersTime'>
+        {times.map((time) => {
+          const { godziny, minuty, sekundy, imie, nazwisko } = time;
+          let timeText = `${imie} ${nazwisko} pracował nad zadaniem `;
+          if (godziny > 0) {
+            timeText += `${godziny} godzin${godziny > 1 ? '' : 'ę'}`;
+          }
+          if (minuty > 0) {
+            timeText += ` ${minuty} minut${minuty > 1 ? '' : 'ę'}`;
+          }
+          if (sekundy > 0 || (godziny === 0 && minuty === 0)) {
+            timeText += ` ${sekundy} sekund${sekundy > 1 ? '' : 'ę'}`;
+          }
+          return (
+            <>
+            <div key={time.uzytkownik_id}>
+              <p>{timeText}</p>
+            </div>
+            </>
+          );
+        })}
+      </div>
+        <h3>{totalTimeText}</h3>
+        </>
+    ),
+    onOk() {},
+  });
+};
+
 
   return (
     <>
@@ -156,6 +227,7 @@ const zadanie = task;
           <p>{zadanie[0].opis}</p>
         </div>
       )}
+      <Button onClick={() => info(taskId)}>Statystyki czasu pracy</Button>
     </div>
     <div className='contentBottom'>
       <div className='zadanie-comments'

@@ -429,3 +429,8 @@
     width: 11.9vw;
     height: 2.7rem;
 }
+.usersTime
+{
+    max-height: 20rem;
+    overflow: auto;
+}
