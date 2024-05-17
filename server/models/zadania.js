@@ -37,10 +37,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE,
             allowNull: true
         },
-        ostatniaZmiana: {
-            type: DataTypes.DATE,
-            allowNull: true
-        },
         projekt_id: {
             type: DataTypes.INTEGER,
             allowNull: false
