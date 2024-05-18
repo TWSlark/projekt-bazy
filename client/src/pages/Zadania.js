@@ -6,16 +6,7 @@ import { Button, Dropdown,  Space  } from 'antd';
 
 const Zadania = () => {
 
-  // const [zadania, setZadania] = useState([]);
-
-  // useEffect(() => {
-  //   axios.get('http://localhost:5000/zadania')
-  //   .then(res => setZadania(res.data))
-  //   .catch(err => console.error("Błąd pobierania użytkowników: ",err));
-  // },[])
-
   const [zadania, setZadania] = useState([]);
-  const [projekty, setProjekty] = useState([]);
 
   useEffect(() => {
     fetchZadania();
@@ -37,8 +28,7 @@ const Zadania = () => {
         },
       });
 
-      setZadania(response.data.zadania);
-      setProjekty(response.data.projekty);
+      setZadania(response.data);
 
     } catch (error) {
       console.error('Błąd przy pobieraniu zadań', error);
@@ -46,18 +36,17 @@ const Zadania = () => {
   };
   
   //console.table(zadania);
-  //console.table(projekty);
 
   const handleMenuClick = (e) => {
     const sortOpt = {
-      '1': {column: 'tytul', order: 'ASC'},
-      '2': {column: 'tytul', order: 'DESC'},
-      '3': {column: 'projekty.tytul', order: 'ASC'},
-      '4': {column: 'projekty.tytul', order: 'DESC'},
-      '5': {column: 'data_utworzenia', order: 'ASC'},
-      '6': {column: 'data_utworzenia', order: 'DESC'},
-      '7': {column: 'do_kiedy', order: 'ASC'},
-      '8': {column: 'do_kiedy', order: 'DESC'}
+      '1': {column: 'z.tytul', order: 'ASC'},
+      '2': {column: 'z.tytul', order: 'DESC'},
+      '3': {column: 'p.tytul', order: 'ASC'},
+      '4': {column: 'p.tytul', order: 'DESC'},
+      '5': {column: 'z.data_utworzenia', order: 'ASC'},
+      '6': {column: 'z.data_utworzenia', order: 'DESC'},
+      '7': {column: 'z.do_kiedy', order: 'ASC'},
+      '8': {column: 'z.do_kiedy', order: 'DESC'}
     };
     const sortParams = sortOpt[e.key];
     fetchZadania(sortParams);
@@ -138,8 +127,8 @@ const Zadania = () => {
         <div className='czlonkowie-container'>
           {zadania.map(task =>(
             <div key={task.id} className='czlonkowie-item'>
-              <span>{task.tytul}</span> 
-              <span>{task.projekty.tytul}</span> 
+              <span>{task.nazwzad}</span> 
+              <span>{task.nazwproj}</span> 
               <span>{new Date(task.data_utworzenia).toLocaleDateString()}</span>
               <span>{new Date(task.do_kiedy).toLocaleDateString()}</span>
             </div>

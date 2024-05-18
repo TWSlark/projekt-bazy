@@ -737,27 +737,20 @@ app.get('/zadania', verifyAccessToken, async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'Nie znaleziono uzytkownika' });
     }
+    const {column, order} = req.query;
 
-    const projects = await Projekty.findAll({
-      include: {
-        model: Uzytkownik,
-        where: { uzytkownik_id: user.uzytkownik_id },
-        through: { attributes: [] }
+    const sortCol = column || 'z.tytul';
+    const sortOrd = order === 'DESC' ? 'DESC' : 'ASC';
+    const zadaniaQuery = `SELECT z.tytul nazwzad, p.tytul nazwproj, z.do_kiedy, z.data_utworzenia FROM zadania z JOIN projekty p ON z.projekt_id = p.projekt_id order by ${sortCol} ${sortOrd};`;
+  
+    db.query(zadaniaQuery, (error, results) => {
+      if (error) {
+        console.error('Błąd pobierania zadań z bazy danych', error);
+        res.status(500).json({ error: 'Błąd pobierania zadań z bazy danych' });
+      } else {
+        res.status(200).json(results);
       }
     });
-
-    const projectIds = projects.map(project => project.projekt_id);
-
-    const sortCol = req.query.column || 'tytul';
-    const sortOrd = req.query.order || 'ASC';
-
-    const tasks = await Zadania.findAll({
-      where: { projekt_id: projectIds },
-      include: Projekty,
-      order: [[sortCol,sortOrd]]
-    });
-
-    res.json({ zadania: tasks, projekty: projects });
     
   } catch (error) {
     console.error('Internal server error z /zadania', error);
