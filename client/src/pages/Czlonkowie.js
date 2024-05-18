@@ -81,10 +81,8 @@ const Czlonkowie = () => {
       '2': {column: 'imie', order: 'DESC'},
       '3': {column: 'nazw', order: 'ASC'},
       '4': {column: 'nazw', order: 'DESC'},
-      '6': {column: 'status', order: 'DESC'},
-      '5': {column: 'status', order: 'ASC'},
-      '7': {column: 'wiek', order: 'ASC'},
-      '8': {column: 'wiek', order: 'DESC'}
+      '5': {column: 'wiek', order: 'ASC'},
+      '6': {column: 'wiek', order: 'DESC'}
     };
     const {column, order} = sortOpt[e.key];
 
@@ -115,23 +113,13 @@ const Czlonkowie = () => {
       icon: <SortDescendingOutlined />,
     },
     {
-      label: 'Status A-Z',
-      key: '5',
-      icon: <SortAscendingOutlined />,
-    },
-    {
-      label: 'Status Z-A',
-      key: '6',
-      icon: <SortDescendingOutlined />,
-    },
-    {
       label: 'Wiek: rosnąco',
-      key: '7',
+      key: '5',
       icon: <ArrowUpOutlined />,
     },
     {
       label: 'Wiek: malejąco',
-      key: '8',
+      key: '6',
       icon: <ArrowDownOutlined />,
     },
   ];
@@ -158,15 +146,15 @@ const Czlonkowie = () => {
       </div>
       <div className='contentBottom-czlonkowie'>
         <div className='czlonkowie-header'>
-          <div className='czl-imie'>Imie i nazwisko</div>
-          <div className='czl-imie'>Status</div>
+          <div className='czl-imie'>Imie</div>
+          <div className='czl-imie'>Nazwisko</div>
           <div className='czl-imie'>Wiek</div>
         </div>
         <div className='czlonkowie-container'>
           {people.map(member =>(
             <div key={member.uzytkownik_id} className='czlonkowie-item'>
-              <span>{member.imie} {member.nazw}</span> 
-              <span>{member.status}</span> 
+              <span>{member.imie}</span> 
+              <span>{member.nazw}</span> 
               <span>{member.wiek}
               <Button type="secondary" onClick={() => showModal(member.uzytkownik_id)} icon={<PlusCircleOutlined />}>
               </Button>
