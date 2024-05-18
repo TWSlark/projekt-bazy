@@ -6,6 +6,7 @@ const Profil = () => {
     const [data, setData] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
     const [editData, setEditData] = useState({
         imie: '',
@@ -25,6 +26,16 @@ const Profil = () => {
         }
         return true;
     };
+    const validateEmail = () => {
+        const userEmail = data.email;
+        const newEmail = document.getElementById('newemail').value;
+
+        if (userEmail !== newEmail) {
+            alert('Proszę podać swój obecny email');
+            return false;
+        }
+        return true;
+    };
     console.log(data);
 
     useEffect(() => {
@@ -37,6 +48,9 @@ const Profil = () => {
     
       const handleCancel = () => {
         setIsModalOpen(false);
+      };
+      const handleEmailCancel = () => {
+        setIsEmailModalOpen(false);
       };
 
     const getProfile = async () => {
@@ -132,6 +146,41 @@ const Profil = () => {
         }
     }
     };
+
+    const showEmailModal = () => {     
+        setIsEmailModalOpen(true);
+    };
+
+    const sendNewMail = async () => {
+        if (validateEmail()){
+            try {
+            const accessToken = localStorage.getItem('accessToken');
+            const email = document.getElementById('newemail').value;
+            console.log('newEmail: ', email);
+
+            const response = await axios.post(`http://localhost:5000/reqnewEmail`, 
+            {
+                email: email
+            },{
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            if (response.data.url) {
+                window.location.href = response.data.url;
+            }
+        } catch (error) {
+            console.error('Blad przy requescie zmiany email', error);
+            if (error.response && error.response.status === 404) {
+                alert('Użytkownik o podanym mailu nie istnieje');
+              } else {
+                console.error('Błąd przy requescie zmiany email', error);
+              }
+        }}
+        setIsModalOpen(false);
+    };
         
     return (
         <div className='content'>
@@ -168,6 +217,12 @@ const Profil = () => {
                                     <option value="1">Mężczyzna</option>
                                     <option value="2">Kobieta</option>
                                 </select>
+                            </Modal>
+                            <Button type="primary" className="passChange" onClick={showEmailModal}>
+                                Zmień adres email
+                            </Button>
+                            <Modal title="Zmiana Adresu Email" open={isEmailModalOpen} onOk={sendNewMail} onCancel={handleEmailCancel}>
+                            <input type="email" placeholder="Podaj obecny adres email" id="newemail" name="email" required />
                             </Modal>
                         </div>
                     </Col>

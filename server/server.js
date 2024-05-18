@@ -1066,7 +1066,113 @@ app.get('/time/:taskId', verifyAccessToken, (req, res) => {
       res.status(200).json(results);
     }
   });
-});   
+});
+
+app.post('/reqnewEmail', (req, res) => {
+
+  const {email} = req.body;
+  console.log("email użytkownik",email);
+  
+  const sql = "SELECT IsUser(?) as IsUser;";
+
+  db.query(sql,[email],(err,result)=>{
+    if (err) {
+      console.error('Błąd pobierania użytkownika', err);
+    } 
+    
+    if (result[0].IsUser === 0) {
+      console.error('Użytkownik nie znaleziony');
+      return res.status(404);
+    }
+    bcrypt.genSalt(10, (err, salt)=>{
+      if (err) {
+        console.log("Błąd generowania soli", err);
+        return;
+      }
+    const userEmail = email;
+    const token = jwt.sign({email: userEmail},tokenKey,{ expiresIn: '30min' });
+
+    bcrypt.hash(token, salt, (err,hashedToken) =>{
+      if (err) {
+        console.log(err);
+      }
+      const sql = "UPDATE uzytkownik SET passToken = ? WHERE email = ?;";
+
+      db.query(sql, [hashedToken,userEmail], (err,data) => {
+        if (err) {
+          console.log(err);
+          return res.json("Error");
+        }
+        res.json({ url: `http://localhost:5000/changeEmail?hashToken=${encodeURIComponent(hashedToken)}` });
+      });
+    });
+  })
+})
+})
+
+app.get('/changeEmail', (req, res) => {
+  const { hashToken } = req.query;
+  const searchSql = "SELECT passToken FROM uzytkownik WHERE `passToken` = ?"
+
+  db.query(searchSql,[hashToken], (err,result)=>{
+    if (err) {
+      return res.json({ error: "Błąd szukania użytkownika" });
+    }
+    if (result.length>0) {
+
+      const userToken = result[0].passToken;
+
+      if (userToken === hashToken) {
+        res.redirect(`http://localhost:3000/zmianaemail?userToken=${encodeURIComponent(userToken)}`);
+      }
+    }
+  })
+});
+
+app.post('/newEmail', (req, res) => {
+  
+  const authHeader = req.headers.authorization;
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+  
+  if (!userEmail) {
+    return res.status(401).json({ error: 'Brak tokena' });
+  }
+  
+  const { newEmail, haslo } = req.body
+  console.log('req.body: ', req.body);
+  const sql = process.env.SQL_LOGIN_QUERY;
+
+  db.query(sql, [userEmail], (err, data) => {
+    if (err) {
+      return res.json("Error");
+    }
+    if (data.length > 0) {
+      bcrypt.compare(haslo.toString(), data[0].haslo, (err, result) => {
+        if (err) {
+          return res.json("Błąd");
+        }
+        if (result) {
+          const setNewPassQuery = "UPDATE uzytkownik SET email = ? WHERE email = ?";
+        db.query(setNewPassQuery, [newEmail, userEmail], (updateErr, updateResult) => {
+          if (updateErr) {
+            return res.json({ error: "Błąd zmiany email" });
+          }
+          res.json({ success: "Email został zaktualizowany" });
+        }); 
+        } else {
+          return res.json({ error: "Błędne hasło" });
+        }
+      })
+    }          
+  });
+});
+
     
 
 server.listen(4000, () => {
