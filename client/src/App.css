@@ -402,7 +402,7 @@
 }
 .passChange
 {
-    margin-right: 10px;
+    margin-inline: 10px;
 }
 .editProfile input, .editProfile select
 {

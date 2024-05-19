@@ -117,7 +117,7 @@ const Profil = () => {
         setEditData({
             imie: data.imie,
             nazwisko: data.nazwisko,
-            data_urodzenia: '',
+            data_urodzenia: formatDate(data.data_urodzenia),
             plec: data.plec,
         });
         setIsEditModalOpen(true);
@@ -181,7 +181,15 @@ const Profil = () => {
         }}
         setIsModalOpen(false);
     };
-        
+
+    function formatDate(dateString) {
+        if (!dateString) {
+          return '';
+        }
+        const [day, month, year] = dateString.split('-');
+        return `${year}-${month}-${day}`;
+      }
+
     return (
         <div className='content'>
             <div className='contentTop'>
@@ -200,19 +208,19 @@ const Profil = () => {
                             <h2>Płeć: {data.plec === '1' ? 'Mężczyzna' : 'Kobieta'}</h2>
                             <h2>Typ konta: {data.typ_konta === 'manager' ? 'Manager' : 'Pracownik'}</h2>
                             <h2>Kolaborator {data.liczba_projektow} {data.liczba_projektow !== '1' ? 'projektów.' : 'projektu.'}</h2>
-                            <Button type="primary" className="passChange" onClick={showModal}>
+                            <Button type="primary" onClick={showModal}>
                                 Zmień hasło
                             </Button>
                             <Modal title="Zmiana Hasła" open={isModalOpen} onOk={sendMail} onCancel={handleCancel}>
                             <input type="email" placeholder="Podaj swój adres email" id="email" name="email" required />
                             </Modal>
-                            <Button type="primary" onClick={showEditModal}>
+                            <Button type="primary" className="passChange" onClick={showEditModal}>
                                 Edytuj profil
                             </Button>
                             <Modal className="editProfile" title="Edycja Profilu" open={isEditModalOpen} onOk={handleEditSave} onCancel={() => setIsEditModalOpen(false)}>
                                 <input type="text" placeholder="Imię" name="imie" value={editData.imie} onChange={handleEditChange} required />
                                 <input type="text" placeholder="Nazwisko" name="nazwisko" value={editData.nazwisko} onChange={handleEditChange} required />
-                                <input type="date" placeholder="Data urodzenia" name="data_urodzenia" onChange={handleEditChange} required />
+                                <input type="date" placeholder="Data urodzenia" name="data_urodzenia" value={editData.data_urodzenia} onChange={handleEditChange} required />
                                 <select name="plec"  value={editData.plec} onChange={handleEditChange} required>
                                     <option value="1">Mężczyzna</option>
                                     <option value="2">Kobieta</option>
