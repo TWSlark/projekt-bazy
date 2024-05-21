@@ -22,8 +22,6 @@ const io = require('socket.io')(server, {
 });
 
 io.on('connection', (socket) => {
-  console.log('A user connected');
-
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
@@ -134,8 +132,6 @@ db.connect((err) => {
   console.log('Połączenie z bazą danych zostało ustanowione');
 });
 
-
-
 app.post('/login', (req, res) => {
   const sql = process.env.SQL_LOGIN_QUERY;
 
@@ -152,7 +148,7 @@ app.post('/login', (req, res) => {
           }
           if (result) {
             const refreshToken = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '1h' });
-            const accessToken = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '5m' });
+            const accessToken = jwt.sign({ email: req.body.email }, tokenKey, { expiresIn: '15m' });
             const updateRefreshToken = "UPDATE uzytkownik SET refreshToken = ? WHERE email = ?";
             db.query(updateRefreshToken, [refreshToken, req.body.email], (updateErr, updateResult) => {
               if (updateErr) {
@@ -243,7 +239,7 @@ app.post('/refresh-token', (req, res) => {
         return res.status(403).json({ error: 'Nieprawidłowy refreshToken' });
       }
 
-      const newAccessToken = jwt.sign({ email: email }, tokenKey, { expiresIn: '5m' });
+      const newAccessToken = jwt.sign({ email: email }, tokenKey, { expiresIn: '15m' });
       return res.json({ accessToken: newAccessToken });
     });
   });
@@ -1166,7 +1162,30 @@ app.post('/newEmail', (req, res) => {
   });
 });
 
-    
+app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
+  const { projectId } = req.params;
+
+  const querry = "SELECT l.*, u.imie, u.nazwisko FROM logi l JOIN zadania z ON l.zadanie_id = z.zadanie_id JOIN projekty p ON z.projekt_id = p.projekt_id JOIN uzytkownik u ON l.uzytkownik_id = u.uzytkownik_id WHERE p.projekt_id = ? ORDER BY l.log_id DESC LIMIT 10;";
+  db.query(querry, [projectId], (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania logów', error);
+      res.status(500).json({ error: 'Internal Server Error z /logi/:taskId' });
+    } else {
+      const logi = results.map((row) => ({
+        log_id: row.log_id,
+        status: row.status,
+        czas_rozpoczecia: row.czas_rozpoczecia,
+        czas_zakonczenia: row.czas_zakonczenia,
+        zadanie_id: row.zadanie_id,
+        uzytkownik_id: row.uzytkownik_id,
+        imie: row.imie,
+        nazwisko: row.nazwisko,
+      }));
+
+      res.json({ logi: logi });
+    }
+  });
+});  
 
 server.listen(4000, () => {
   console.log('Server is running on port 4000');

@@ -77,6 +77,16 @@ const Projekt = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState(null);
+  const [logi, setLogi] = useState([]);
+  const [logModal, setLogModal] = useState(false);
+
+  const showLogModal = () => {
+    setLogModal(true);
+  };
+
+  const hideLogModal = () => {
+    setLogModal(false);
+  };
 
   const showDeleteModal = (userId) => {
     setUserIdToDelete(userId);
@@ -116,10 +126,35 @@ const Projekt = () => {
     socket.on('taskUpdate', (data) => {
       //console.log('Task update received:', data);
       fetchTasks();
+      fetchLogi();
     });
 
     return () => socket.disconnect();
   }, [projectId]);
+
+  const fetchLogi = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`http://localhost:5000/logi/${projectId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setLogi(data.logi);
+        console.log(data.logi);
+      } else {
+        throw new Error('Nie udało się pobrać logów');
+      }
+    } catch (error) {
+      console.error('Błąd przy pobieraniu logów', error);
+    }
+  };
 
   const isUserAssigned = async () => {
     try {
@@ -137,6 +172,7 @@ const Projekt = () => {
       if (response.ok) {
         if (data.isAssociated) {
           fetchTasks();
+          fetchLogi();
         } else {
           navigate('/pulpit');
         }
@@ -355,41 +391,63 @@ const Projekt = () => {
             <p>Czy na pewno chcesz usunąć tego użytkownika?</p>
           </Modal>
         </div>
-        <Button type="primary" onClick={showModal} icon={<PlusCircleOutlined />}>
-          Dodaj zadanie
-        </Button>
-        <Modal title="Dodawanie zadania" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
-          <form className='formZadania'>
-            <label>
-              Tytuł:
-              <input type="text" name="title" />
-            </label>
-            <label>
-              Opis:
-              <input type="text" name="description" />
-            </label>
-            <label>
-              Status:
-              <select name="status">
-                <option value="Do zrobienia">Do zrobienia</option>
-                <option value="Trwajace">Trwajace</option>
-                <option value="Zrobione">Zrobione</option>
-              </select>
-            </label>
-            <label>
-              Priorytet:
-              <select name="priority">
-                <option value="Niski">Niski</option>
-                <option value="Sredni">Średni</option>
-                <option value="Wysoki">Wysoki</option>
-              </select>
-            </label>
-            <label>
-              Termin:
-              <input type="date" name="deadline" />
-            </label>
-          </form>
-        </Modal>
+        <div>
+          <Button type="primary" onClick={showModal} icon={<PlusCircleOutlined />}>
+            Dodaj zadanie
+          </Button>
+          <Modal title="Dodawanie zadania" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+            <form className='formZadania'>
+              <label>
+                Tytuł:
+                <input type="text" name="title" />
+              </label>
+              <label>
+                Opis:
+                <input type="text" name="description" />
+              </label>
+              <label>
+                Status:
+                <select name="status">
+                  <option value="Do zrobienia">Do zrobienia</option>
+                  <option value="Trwajace">Trwajace</option>
+                  <option value="Zrobione">Zrobione</option>
+                </select>
+              </label>
+              <label>
+                Priorytet:
+                <select name="priority">
+                  <option value="Niski">Niski</option>
+                  <option value="Sredni">Średni</option>
+                  <option value="Wysoki">Wysoki</option>
+                </select>
+              </label>
+              <label>
+                Termin:
+                <input type="date" name="deadline" />
+              </label>
+            </form>
+          </Modal>
+          <Button onClick={showLogModal}>Ostatnie zmiany</Button>
+            <Modal title="Ostatnie zmiany" open={logModal} onOk={hideLogModal} onCancel={hideLogModal} >
+            {logi.map((log) => (
+              <p key={log.log_id} style={{ marginBottom: '0.1rem' }}>
+                Zmiana na: {log.status} ({log.imie} {log.nazwisko})
+                {log.czas_rozpoczecia && (
+                  <>
+                    <br />
+                    Rozpoczęcie: {new Date(log.czas_rozpoczecia).toLocaleString()}
+                  </>
+                )}
+                {log.czas_zakonczenia && (
+                  <>
+                    <br />
+                    Zakończenie: {new Date(log.czas_zakonczenia).toLocaleString()}
+                  </>
+                )}
+              </p>
+            ))}
+            </Modal>
+        </div>
       </div>
       <div className='contentBottom'>
         <DndProvider backend={HTML5Backend}>
