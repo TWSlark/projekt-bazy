@@ -431,7 +431,7 @@ const Projekt = () => {
             <Modal title="Ostatnie zmiany" open={logModal} onOk={hideLogModal} onCancel={hideLogModal} >
             {logi.map((log) => (
               <p key={log.log_id} style={{ marginBottom: '0.1rem' }}>
-                Zmiana na: {log.status} ({log.imie} {log.nazwisko})
+                Zmiana zadania "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
                 {log.czas_rozpoczecia && (
                   <>
                     <br />
