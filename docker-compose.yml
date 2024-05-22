@@ -1,0 +1,43 @@
+version: '3'
+services:
+  mysql:
+    build:
+      context: D:/sql/mysql
+      dockerfile: Dockerfile
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=taskify
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  server:
+    build:
+      context: ./server
+    ports:
+      - '5000:5000'
+    environment:
+      - USER=root
+      - PORTDB=3306
+      - HOSTDB=mysql
+      - DATABASE=taskify
+      - PASSWORD=
+      - TOKENKEY=jwtTaskifyKey
+      - HOSTMT=sandbox.smtp.mailtrap.io
+      - PORTMT=2525
+      - USERMT=bce7af333b2435
+      - PASSMT=8df1b5f24c454b
+    depends_on:
+      - mysql
+
+  react:
+    build:
+      context: ./client
+    ports:
+      - '3000:3000'
+    depends_on:
+      - server
+
+volumes:
+  mysql-data:
