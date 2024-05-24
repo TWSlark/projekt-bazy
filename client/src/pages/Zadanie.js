@@ -167,7 +167,7 @@ const zadanie = task;
 const totalTime = (times) => {
   let totalTimeText = '';
   const totalSeconds = times.reduce((total, time) => total + Number(time.suma), 0);
-  console.log('totalSeconds: ', totalSeconds);
+  //console.log('totalSeconds: ', totalSeconds);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;

@@ -6,7 +6,7 @@ import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Modal, Button, Avatar, Tooltip, Timeline, Statistic } from 'antd';
 import socketIOClient from 'socket.io-client';
 
-const Task = ({ id, title, description, status, priority, assignedUser, estimatedTime, onMoveTask, onDeleteTask, projectId }) => {
+const Task = ({ id, title, description, status, priority, assignedUser, szacowany_czas, estimatedTime, onMoveTask, onDeleteTask, projectId }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -49,14 +49,6 @@ const Task = ({ id, title, description, status, priority, assignedUser, estimate
   const totalMilliseconds = (hours * 3600 + minutes * 60 + seconds) * 1000;
   const [remainingTime, setRemainingTime] = useState(totalMilliseconds);
   
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRemainingTime((prevRemainingTime) => prevRemainingTime - 1000);
-    }, 1000);
-  
-    return () => clearInterval(interval);
-  }, []);  
-  
   return (
     <div className="task" ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
       <Link to={`/projekt/${projectId}/zadanie/${id}`} className="project-link">
@@ -64,7 +56,11 @@ const Task = ({ id, title, description, status, priority, assignedUser, estimate
       </Link>
       <div className="priority">{priority}</div>
       <p>{description}</p>
-      <Countdown title="Szacownay czas na zadanie: " value={Date.now() + remainingTime} />
+      { assignedUser ? (
+        <Countdown title="Pozostały szacowany czas: " value={Date.now() + remainingTime} />
+      ) : (
+        <p>Przewidywany szacowany czas: <br/> {szacowany_czas}</p>
+      )}
       <Button type="primary" onClick={showModal} icon={<MinusCircleOutlined />}>
         Usuń
       </Button>
@@ -141,7 +137,6 @@ const Projekt = () => {
     const socket = socketIOClient('http://localhost:4000');
 
     socket.on('taskUpdate', (data) => {
-      //console.log('Task update received:', data);
       fetchTasks();
       fetchLogi();
     });
@@ -220,6 +215,7 @@ const Projekt = () => {
       }));
       setTasks(assignedUsers);
       setUsers(data.users);
+      //console.log(data);
     } catch (error) {
       console.error('Blad przy pobieraniu zadan', error);
     }
@@ -386,7 +382,7 @@ const Projekt = () => {
       <div ref={drop} className="drag-container" data-status={status}>
         <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
-          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} assignedUser={task.assignedUser} estimatedTime={task.szacowany_czas} projectId={projectId} onDeleteTask={deleteTask} />
+          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} assignedUser={task.assignedUser} szacowany_czas={task.szacowany_czas} estimatedTime={task.pozostaly_czas} projectId={projectId} onDeleteTask={deleteTask} />
         ))}
       </div>
     );

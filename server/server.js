@@ -415,30 +415,50 @@ app.delete('/projects/:projectId', verifyAccessToken, async (req, res) => {
 app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
   const authHeader = req.headers.authorization;
-
   let userEmail = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring('Bearer '.length);
-      const decoded = jwt.verify(token, tokenKey);
-      userEmail = decoded.email;
-    }
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
 
   const usersQuery = 'SELECT uzytkownik_id, imie, nazwisko FROM uzytkownik WHERE uzytkownik_id IN (SELECT uzytkownik_id FROM projekty_uzytkownik WHERE projekt_id = ?)';
-
   db.query(usersQuery, [projectId, userEmail], (error, usersData) => {
     if (error) {
       console.error('Blad pobierania uzytkownikow z projektu', error);
       res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
     } else {
-      const users = usersData.map(user => ({ uzytkownik_id: user.uzytkownik_id, imie: user.imie, nazwisko: user.nazwisko}));
-      
-      db.query("SELECT * FROM zadania WHERE projekt_id = ?", [projectId], (error, tasksData, fields) => {
+      const users = usersData.map(user => ({ uzytkownik_id: user.uzytkownik_id, imie: user.imie, nazwisko: user.nazwisko }));
+
+      const proceduraQuery = `CALL szac(?)`;
+      db.query(proceduraQuery, [projectId], (error, tasksProcedura, fields) => {
         if (error) {
           console.error('Blad pobierania zadan', error);
           res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
         } else {
-          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy, szacowany_czas: task.szacowany_czas, uzytkownik_id: task.uzytkownik_id }));
-          res.json({ tasks, users });
+          db.query("SELECT * FROM zadania WHERE projekt_id = ?", [projectId], (error, tasksData) => {
+            if (error) {
+              console.error('Blad pobierania zadan', error);
+              res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
+            } else {
+              const tasks = tasksData.map(task => {
+                const procedura = tasksProcedura[0].find(t => t.zadanie_id === task.zadanie_id);
+                return {
+                  zadanie_id: task.zadanie_id,
+                  tytul: task.tytul,
+                  opis: task.opis,
+                  status: task.status,
+                  priorytet: task.priorytet,
+                  do_kiedy: task.do_kiedy,
+                  szacowany_czas: task.szacowany_czas,
+                  pozostaly_czas: procedura.roznica,
+                  uzytkownik_id: task.uzytkownik_id
+                };
+              });
+              console.log(tasks);
+              res.json({ tasks, users });
+            }
+          });
         }
       });
     }
@@ -1123,7 +1143,7 @@ app.post('/newEmail', (req, res) => {
 app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
 
-  const querry = "SELECT l.*, z.tytul, u.imie, u.nazwisko FROM logi l JOIN zadania z ON l.zadanie_id = z.zadanie_id JOIN projekty p ON z.projekt_id = p.projekt_id JOIN uzytkownik u ON l.uzytkownik_id = u.uzytkownik_id WHERE p.projekt_id = ? ORDER BY l.log_id DESC LIMIT 10;";
+  const querry = "SELECT l.*, z.tytul, u.imie, u.nazwisko FROM logi l JOIN zadania z ON l.zadanie_id = z.zadanie_id JOIN projekty p ON z.projekt_id = p.projekt_id JOIN uzytkownik u ON l.uzytkownik_id = u.uzytkownik_id WHERE p.projekt_id = ? ORDER BY l.log_id DESC;";
   db.query(querry, [projectId], (error, results) => {
     if (error) {
       console.error('Błąd pobierania logów', error);
