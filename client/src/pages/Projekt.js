@@ -3,10 +3,10 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { Modal, Button, Avatar, Tooltip } from 'antd';
+import { Modal, Button, Avatar, Tooltip, Timeline, Statistic } from 'antd';
 import socketIOClient from 'socket.io-client';
 
-const Task = ({ id, title, description, status, priority, assignedUser, onMoveTask, onDeleteTask, projectId }) => {
+const Task = ({ id, title, description, status, priority, assignedUser, estimatedTime, onMoveTask, onDeleteTask, projectId }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -43,6 +43,20 @@ const Task = ({ id, title, description, status, priority, assignedUser, onMoveTa
     setIsModalVisible(false);
   };
 
+  const { Countdown } = Statistic;
+
+  const [hours, minutes, seconds] = estimatedTime.split(":").map(Number);
+  const totalMilliseconds = (hours * 3600 + minutes * 60 + seconds) * 1000;
+  const [remainingTime, setRemainingTime] = useState(totalMilliseconds);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRemainingTime((prevRemainingTime) => prevRemainingTime - 1000);
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, []);  
+  
   return (
     <div className="task" ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
       <Link to={`/projekt/${projectId}/zadanie/${id}`} className="project-link">
@@ -50,6 +64,7 @@ const Task = ({ id, title, description, status, priority, assignedUser, onMoveTa
       </Link>
       <div className="priority">{priority}</div>
       <p>{description}</p>
+      <Countdown title="Szacownay czas na zadanie: " value={Date.now() + remainingTime} />
       <Button type="primary" onClick={showModal} icon={<MinusCircleOutlined />}>
         Usuń
       </Button>
@@ -105,11 +120,13 @@ const Projekt = () => {
   const handleOk = () => {
     const title = document.querySelector('input[name="title"]').value;
     const description = document.querySelector('input[name="description"]').value;
-    const status = document.querySelector('select[name="status"]').value;
+    const status = "Do zrobienia"
+    const hours = document.querySelector('input[name="godziny"]').value;
+    const minutes = document.querySelector('input[name="minuty"]').value;
     const priority = document.querySelector('select[name="priority"]').value;
     const deadline = document.querySelector('input[name="deadline"]').value;
 
-    createTask({ title, description, status, priority, deadline });
+    createTask({ title, description, status, hours, minutes, priority, deadline });
 
     setIsModalOpen(false);
   };
@@ -227,7 +244,7 @@ const Projekt = () => {
     }
   };
 
-  const createTask = async ({ title, description, status, priority, deadline }) => {
+  const createTask = async ({ title, description, status, hours, minutes, priority, deadline }) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
@@ -237,7 +254,7 @@ const Projekt = () => {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ nazwa: title, opis: description, status, priorytet: priority, termin: deadline }),
+        body: JSON.stringify({ nazwa: title, opis: description, status, godziny: hours, minuty: minutes, priorytet: priority, termin: deadline }),
       });
 
       fetchTasks();
@@ -369,7 +386,7 @@ const Projekt = () => {
       <div ref={drop} className="drag-container" data-status={status}>
         <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
-          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} assignedUser={task.assignedUser} projectId={projectId} onDeleteTask={deleteTask} />
+          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} assignedUser={task.assignedUser} estimatedTime={task.szacowany_czas} projectId={projectId} onDeleteTask={deleteTask} />
         ))}
       </div>
     );
@@ -406,12 +423,8 @@ const Projekt = () => {
                 <input type="text" name="description" />
               </label>
               <label>
-                Status:
-                <select name="status">
-                  <option value="Do zrobienia">Do zrobienia</option>
-                  <option value="Trwajace">Trwajace</option>
-                  <option value="Zrobione">Zrobione</option>
-                </select>
+                Przewidywany czas:
+                <input type="number" min="0" max="838" step="1" name="godziny" />:<input type="number" min="0" max="59" step="1" name="minuty" />
               </label>
               <label>
                 Priorytet:
@@ -428,25 +441,30 @@ const Projekt = () => {
             </form>
           </Modal>
           <Button onClick={showLogModal}>Ostatnie zmiany</Button>
-            <Modal title="Ostatnie zmiany" open={logModal} onOk={hideLogModal} onCancel={hideLogModal} >
-            {logi.map((log) => (
-              <p key={log.log_id} style={{ marginBottom: '0.1rem' }}>
-                Zmiana zadania "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
-                {log.czas_rozpoczecia && (
-                  <>
-                    <br />
-                    Rozpoczęcie: {new Date(log.czas_rozpoczecia).toLocaleString()}
-                  </>
-                )}
-                {log.czas_zakonczenia && (
-                  <>
-                    <br />
-                    Zakończenie: {new Date(log.czas_zakonczenia).toLocaleString()}
-                  </>
-                )}
-              </p>
-            ))}
-            </Modal>
+          <Modal title="Ostatnie zmiany" open={logModal} onCancel={hideLogModal} footer={null}>
+            <Timeline>
+              {logi.map((log) => (
+                <Timeline.Item
+                  key={log.log_id}
+                  color={log.status === 'Zrobione' ? 'rgb(97, 255, 83)' : log.status === 'Trwajace' ? 'rgb(252, 255, 79)' : 'rgb(255, 101, 255)'}
+                >
+                    Zmiana "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
+                    {log.czas_rozpoczecia && (
+                      <>
+                        <br />
+                        {new Date(log.czas_rozpoczecia).toLocaleString()}
+                      </>
+                    )}
+                    {log.czas_zakonczenia && (
+                      <>
+                        <br />
+                        {new Date(log.czas_zakonczenia).toLocaleString()}
+                      </>
+                    )}
+                </Timeline.Item>
+              ))}
+            </Timeline>
+          </Modal>
         </div>
       </div>
       <div className='contentBottom'>

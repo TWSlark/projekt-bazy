@@ -254,58 +254,15 @@ app.put('/logout', (req, res) => {
       userEmail = decoded.email;
     }
 
-    db.beginTransaction((err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Internal server error z /logout' });
+    const querry = 'UPDATE uzytkownik SET refreshToken = NULL WHERE email = ?';
+
+    db.query(querry, [userEmail], (error, results) => {
+      if (error) {
+        console.error('Blad wylogowania', error);
+        res.status(500).json({ error: 'Internal Server Error z /logout' });
+      } else {
+        res.status(200).json({ message: 'Udane wylogowanie' });
       }
-
-      const uzytkownikQuerry = "SELECT uzytkownik_id FROM uzytkownik WHERE email = ?";
-      db.query(uzytkownikQuerry, [userEmail], (err, result) => {
-        if (err) {
-          return db.rollback(() => {
-            res.status(500).json({ error: 'Internal server error z /logout' });
-          });
-        }
-
-        if (result.length > 0) {
-          const uzytkownikId = result[0].uzytkownik_id;
-  
-          const updateRefreshTokenSql = "UPDATE uzytkownik SET refreshToken = NULL WHERE email = ?";
-          db.query(updateRefreshTokenSql, [userEmail], (err, result) => {
-            if (err) {
-              return db.rollback(() => {
-                console.error('logout uzytkownik', err);
-                res.status(500).json({ error: 'Internal server error z /logout' });
-              });
-            }
-  
-            const updateTaskStatusSql = "UPDATE zadania SET status = 'Do zrobienia' WHERE status = 'Trwajace' AND uzytkownik_id = ?";
-            db.query(updateTaskStatusSql, [uzytkownikId], (err, result) => {
-              if (err) {
-                return db.rollback(() => {
-                  console.error('logout zadania', err);
-                  res.status(500).json({ error: 'Internal server error z /logout' });
-                });
-              }
-  
-              db.commit((err) => {
-                if (err) {
-                  return db.rollback(() => {
-                    console.error('Nie udalo sie przepowadzic transakcji:', err);
-                    res.status(500).json({ error: 'Internal server error z /logout' });
-                  });
-                }
-                io.emit('taskUpdate', { action: 'create/update/delete' });
-                res.status(200).json({ message: 'Jest git' });
-              });
-            });
-          });
-        } else {
-          db.rollback(() => {
-            res.status(404).json({ error: 'Nie znaleziono uzytkownika' });
-          });
-        }
-      });
     });
 });
 
@@ -480,7 +437,7 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
           console.error('Blad pobierania zadan', error);
           res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
         } else {
-          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy, uzytkownik_id: task.uzytkownik_id }));
+          const tasks = tasksData.map(task => ({ zadanie_id: task.zadanie_id, tytul: task.tytul, opis: task.opis, status: task.status, priorytet: task.priorytet, do_kiedy: task.do_kiedy, szacowany_czas: task.szacowany_czas, uzytkownik_id: task.uzytkownik_id }));
           res.json({ tasks, users });
         }
       });
@@ -516,11 +473,13 @@ app.put('/tasks/:taskId', verifyAccessToken, (req, res) => {
 
 app.post('/tasks/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
-  const { nazwa, opis, status, priorytet, termin } = req.body;
+  const { nazwa, opis, status, godziny, minuty, priorytet, termin } = req.body;
 
-  const insertQuery = 'INSERT INTO zadania (tytul, opis, status, priorytet, do_kiedy, data_utworzenia, projekt_id) VALUES (?, ?, ?, ?, ?, NOW(), ?)';
+  const szacowanyCzas = `${godziny}` + ':' + `${minuty}` + ':' + '00';
 
-  db.query(insertQuery, [nazwa, opis, status, priorytet, termin, projectId], (error, results) => {
+  const insertQuery = 'INSERT INTO zadania (tytul, opis, status, priorytet, do_kiedy, data_utworzenia, szacowany_czas, projekt_id) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)';
+
+  db.query(insertQuery, [nazwa, opis, status, priorytet, termin, szacowanyCzas, projectId], (error, results) => {
     if (error) {
       console.error('Blad dodawania zadania', error);
       res.status(500).json({ error: 'Internal Server Error z /tasks/:projectId' });
