@@ -442,19 +442,25 @@ const Projekt = () => {
               {logi.map((log) => (
                 <Timeline.Item
                   key={log.log_id}
-                  color={log.status === 'Zrobione' ? 'rgb(97, 255, 83)' : log.status === 'Trwajace' ? 'rgb(252, 255, 79)' : 'rgb(255, 101, 255)'}
+                  color={log.status === 'Zrobione' ? 'rgb(97, 255, 83)' : log.status === 'Trwajace' ? 'rgb(252, 255, 79)' : log.status === 'Utworzono' ? 'blue' : 'rgb(255, 101, 255)'}
                 >
-                    Zmiana "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
                     {log.czas_rozpoczecia && (
                       <>
+                        Zmiana "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
                         <br />
                         {new Date(log.czas_rozpoczecia).toLocaleString()}
                       </>
                     )}
                     {log.czas_zakonczenia && (
                       <>
+                        Zmiana "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
                         <br />
                         {new Date(log.czas_zakonczenia).toLocaleString()}
+                      </>
+                    )}
+                    {log.status === "Utworzono" && (
+                      <>
+                        Utworzono zadanie "{log.tytul}"
                       </>
                     )}
                 </Timeline.Item>

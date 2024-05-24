@@ -1143,7 +1143,7 @@ app.post('/newEmail', (req, res) => {
 app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
 
-  const querry = "SELECT l.*, z.tytul, u.imie, u.nazwisko FROM logi l JOIN zadania z ON l.zadanie_id = z.zadanie_id JOIN projekty p ON z.projekt_id = p.projekt_id JOIN uzytkownik u ON l.uzytkownik_id = u.uzytkownik_id WHERE p.projekt_id = ? ORDER BY l.log_id DESC;";
+  const querry = "SELECT l.*, z.tytul, u.imie, u.nazwisko FROM logi l JOIN zadania z ON l.zadanie_id = z.zadanie_id JOIN projekty p ON z.projekt_id = p.projekt_id LEFT JOIN uzytkownik u ON l.uzytkownik_id = u.uzytkownik_id WHERE p.projekt_id = ? ORDER BY l.log_id DESC;";
   db.query(querry, [projectId], (error, results) => {
     if (error) {
       console.error('Błąd pobierania logów', error);
@@ -1161,6 +1161,7 @@ app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
         nazwisko: row.nazwisko,
       }));
 
+      console.log(logi);
       res.json({ logi: logi });
     }
   });
