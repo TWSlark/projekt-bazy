@@ -211,6 +211,72 @@ const info = () => {
         })}
       </div>
         <h3>{totalTimeText}</h3>
+        <div> {times.map((time, index, self) => {
+          const isDuplicate = self.findIndex(t => t.szacowany_czas === time.szacowany_czas) < index;
+          if (!isDuplicate) {
+            let timeText ='';
+            let czas = time.szacowany_czas;
+            const hours = Math.floor(czas / 3600);
+            const minutes = Math.floor((czas % 3600) / 60);
+            const seconds = czas % 60;
+            if (hours > 0) {
+              timeText += `${hours} godzin${hours > 1 ? '' : 'ę'}`;
+            }
+            if (minutes > 0) {
+              timeText += ` ${minutes} minut${minutes > 1 ? '' : 'ę'}`;
+            }
+            if (seconds > 0 || (hours === 0 && minutes === 0)) {
+              timeText += ` ${seconds} sekund${seconds > 1 ? '' : 'ę'}`;
+            }
+            return (
+              <h3 key={index}>
+                <p>{`Szacowany czas pracy nad zadaniem wynosi: ${timeText}`}</p>
+              </h3>
+            );
+          }
+          return null;
+        })}
+        </div>
+          <div>
+          {
+          times.map((time, index, self) => {
+          const isDuplicate = self.findIndex(t => t.szacowany_czas === time.szacowany_czas) < index;
+          if (!isDuplicate) {
+            let calkowity = times.reduce((total, time) => total + Number(time.suma), 0);
+            console.log('calkowity: ', calkowity);
+            let timeText ='';
+            const czas = time.szacowany_czas;
+            const pozostalo = czas - calkowity;
+            console.log('pozostalo: ', pozostalo);
+            const hours = Math.floor(Math.abs(pozostalo) / 3600);
+            const minutes = Math.floor((Math.abs(pozostalo) % 3600) / 60);
+            const seconds = Math.abs(pozostalo) % 60;
+            if (hours > 0) {
+              timeText += `${hours} godzin${hours > 1 ? '' : 'ę'}`;
+            }
+            if (minutes > 0) {
+              timeText += ` ${minutes} minut${minutes > 1 ? '' : 'ę'}`;
+            }
+            if (seconds > 0 || (hours === 0 && minutes === 0)) {
+              timeText += ` ${seconds} sekund${seconds > 1 ? '' : 'ę'}`;
+            }
+            if (pozostalo < 0) {
+              return (
+                <h3 key={index}>
+                  <p>{`Szacowany czas pracy został przekroczony o: ${timeText}`}</p>
+                </h3>
+              );
+            } else {
+              return (
+                <h3 key={index}>
+                  <p>{`Pozostało: ${timeText}`}</p>
+                </h3>
+              );
+            }
+          }
+          return null;
+        })}
+          </div>
         </>
     ),
     onOk() {},
