@@ -89,7 +89,7 @@ const Zadania = () => {
       icon: <ArrowUpOutlined />,
     },
     {
-      label: 'Termin ostateczny: malejącoo',
+      label: 'Termin ostateczny: malejąco',
       key: '8',
       icon: <ArrowDownOutlined />,
     },

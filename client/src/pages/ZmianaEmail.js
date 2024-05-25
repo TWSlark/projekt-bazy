@@ -63,7 +63,7 @@ function ZmianaEmail() {
         <div className='verify-container'>
             <form method='POST' onSubmit={handleSubmit}>
                 <input type='email' id='newEmail' name='newEmail' onChange={handleInput} placeholder='Podaj nowy email'/>
-                <input type='password' id='newPass' name='haslo' onChange={handleInput} placeholder='Podaj nowe hasło'/>
+                <input type='password' id='newPass' name='haslo' onChange={handleInput} placeholder='Podaj swoje hasło'/>
                 <button type='submit'>Zaktualizuj Email</button>
             </form>
         </div>
