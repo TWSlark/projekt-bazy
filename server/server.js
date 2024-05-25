@@ -430,7 +430,7 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
     } else {
       const users = usersData.map(user => ({ uzytkownik_id: user.uzytkownik_id, imie: user.imie, nazwisko: user.nazwisko }));
 
-      const proceduraQuery = `CALL szac(?)`;
+      const proceduraQuery = `CALL pozostaly_czas(?)`;
       db.query(proceduraQuery, [projectId], (error, tasksProcedura, fields) => {
         if (error) {
           console.error('Blad pobierania zadan', error);
@@ -451,7 +451,7 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
                   priorytet: task.priorytet,
                   do_kiedy: task.do_kiedy,
                   szacowany_czas: task.szacowany_czas,
-                  pozostaly_czas: procedura.roznica,
+                  pozostaly_czas: procedura.pozostaly_czas,
                   uzytkownik_id: task.uzytkownik_id
                 };
               });

@@ -6,7 +6,7 @@ import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Modal, Button, Avatar, Tooltip, Timeline, Statistic } from 'antd';
 import socketIOClient from 'socket.io-client';
 
-const Task = ({ id, title, description, status, priority, assignedUser, szacowany_czas, estimatedTime, onMoveTask, onDeleteTask, projectId }) => {
+const Task = ({ id, title, description, status, priority, assignedUser, estimatedTime, onDeleteTask, projectId }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { id, status },
@@ -56,10 +56,13 @@ const Task = ({ id, title, description, status, priority, assignedUser, szacowan
       </Link>
       <div className="priority">{priority}</div>
       <p>{description}</p>
-      { assignedUser ? (
+      { status === "Trwajace" ? (
         <Countdown title="Pozostały szacowany czas: " value={Date.now() + remainingTime} />
       ) : (
-        <p>Przewidywany szacowany czas: <br/> {szacowany_czas}</p>
+        <div>
+          <small style={{color: "grey"}}>Przewidywany szacowany czas: </small><br/>
+          <h3 style={{fontWeight: "450"}}>{estimatedTime}</h3>
+        </div>
       )}
       <Button type="primary" onClick={showModal} icon={<MinusCircleOutlined />}>
         Usuń
@@ -382,7 +385,7 @@ const Projekt = () => {
       <div ref={drop} className="drag-container" data-status={status}>
         <div className={status.replace(/\s/g, '').toLowerCase()}>{status}</div>
         {tasks.filter(task => task.status === status).map(task => (
-          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} assignedUser={task.assignedUser} szacowany_czas={task.szacowany_czas} estimatedTime={task.pozostaly_czas} projectId={projectId} onDeleteTask={deleteTask} />
+          <Task key={task.zadanie_id} id={task.zadanie_id} title={task.tytul} description={task.opis} status={task.status} priority={task.priorytet} assignedUser={task.assignedUser} estimatedTime={task.pozostaly_czas} projectId={projectId} onDeleteTask={deleteTask} />
         ))}
       </div>
     );
@@ -444,14 +447,14 @@ const Projekt = () => {
                   key={log.log_id}
                   color={log.status === 'Zrobione' ? 'rgb(97, 255, 83)' : log.status === 'Trwajace' ? 'rgb(252, 255, 79)' : log.status === 'Utworzono' ? 'blue' : 'rgb(255, 101, 255)'}
                 >
-                    {log.czas_rozpoczecia && (
+                    {log.czas_rozpoczecia && log.status != "Utworzono" && (
                       <>
                         Zmiana "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
                         <br />
                         {new Date(log.czas_rozpoczecia).toLocaleString()}
                       </>
                     )}
-                    {log.czas_zakonczenia && (
+                    {log.czas_zakonczenia && log.status != "Utworzono" && (
                       <>
                         Zmiana "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
                         <br />
