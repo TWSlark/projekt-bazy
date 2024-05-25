@@ -169,7 +169,7 @@ app.post('/login', (req, res) => {
 app.get('/verify', (req, res) => {
   const { hashToken } = req.query;
   console.log(hashToken);
-  const searchSql = "SELECT email FROM uzytkownik WHERE `token` = ?"
+  const searchSql = "SELECT email, token FROM uzytkownik WHERE `token` = ?"
 
   db.query(searchSql,[hashToken], (err,result)=>{
     if (err) {
