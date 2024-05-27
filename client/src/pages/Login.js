@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { notification } from 'antd';
 import valid from './LoginValid';
 import axios from 'axios';
 import './Login.css';
@@ -36,7 +37,11 @@ function Login() {
                     navigate('/pulpit');
                 } else {
                     if (res.data === "Konto nieaktywne" || res.data === "Nie ma takich poswiadczen") {
-                        alert("Konto nieaktywne lub nie ma takich poswiadczen");
+                        notification.error({
+                            message: 'Błąd',
+                            description: 'Nie istnieje konto o takich poświadczeniach.',
+                            duration: 2
+                          });
                     }
                 }
             })

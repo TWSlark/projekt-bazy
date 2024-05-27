@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Progress, Modal, Button } from 'antd';
+import { Row, Col, Progress, Modal, Button, notification } from 'antd';
 import { PlusCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -112,6 +112,11 @@ const Pulpit = () => {
       fetchProjects();
     } catch (error) {
       console.error("Błąd przy usuwaniu projektu:", error);
+      notification.error({
+        message: 'Błąd',
+        description: 'Nie udało się usunąć projektu, nie jesteś managerem tego projektu.',
+        duration: 2
+      });
     }
   }
 

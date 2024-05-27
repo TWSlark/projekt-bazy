@@ -396,15 +396,37 @@ app.delete('/projects/:projectId', verifyAccessToken, async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    querry = 'DELETE FROM projekty WHERE projekt_id = ?';
+    const authHeader = req.headers.authorization;
+    let userEmail = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring('Bearer '.length);
+      const decoded = jwt.verify(token, tokenKey);
+      userEmail = decoded.email;
+    }
 
-    db.query(querry, [projectId], (error, results) => {
+    const isManagerQuery = 'SELECT manager FROM projekty_uzytkownik WHERE projekt_id = ? AND uzytkownik_id = (SELECT uzytkownik_id FROM uzytkownik WHERE email = ?)';
+
+    db.query(isManagerQuery, [projectId, userEmail], (error, results) => {
       if (error) {
-        console.error('Nie usunięto projektu:', error);
-        res.status(500).json({ error: 'Nie usunięto projektu' });
-      } else {
-        res.status(200).json({ message: 'Projekt usunięty' });
+        console.error('Błąd sprawdzania czy użytkownik jest managerem projektu', error);
+        return res.status(500).json({ error: 'Błąd sprawdzania czy użytkownik jest managerem projektu' });
       }
+
+      if (results.length === 0 || results[0].manager !== 1) {
+        return res.status(403).json({ error: 'Brak uprawnień do usunięcia projektu' });
+      }
+
+      const querry = 'DELETE FROM projekty WHERE projekt_id = ?';
+
+      db.query(querry, [projectId], (error, results) => {
+        if (error) {
+          console.error('Nie usunięto projektu:', error);
+          res.status(500).json({ error: 'Nie usunięto projektu' });
+        } else {
+          io.emit('projectUpdate');
+          res.status(200).json({ message: 'Projekt usunięty' });
+        }
+      });
     });
   } catch (error) {
     console.error('Nie usunięto projektu:', error);
@@ -679,7 +701,7 @@ app.delete('/assign/:projectId/:userId', verifyAccessToken, (req, res) => {
       return res.status(403).json({ error: 'Brak uprawnień do usunięcia użytkownika z projektu' });
     }
 
-    const deleteQuery = 'DELETE FROM projekty_uzytkownik WHERE projekt_id = ? AND uzytkownik_id = ?';
+    const deleteQuery = 'DELETE FROM projekty_uzytkownik WHERE projekt_id = ? AND uzytkownik_id = ? AND manager = 0';
 
     db.query(deleteQuery, [projectId, userId], (error, results) => {
       if (error) {

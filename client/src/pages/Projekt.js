@@ -3,7 +3,7 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { Modal, Button, Avatar, Tooltip, Timeline, Statistic } from 'antd';
+import { Modal, Button, Avatar, Tooltip, Timeline, Statistic, notification } from 'antd';
 import socketIOClient from 'socket.io-client';
 
 const Task = ({ id, title, description, status, priority, assignedUser, estimatedTime, onDeleteTask, projectId }) => {
@@ -340,20 +340,29 @@ const Projekt = () => {
   const deleteUser = async () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-
-      await fetch(`http://localhost:5000/assign/${projectId}/${userIdToDelete}`, {
+  
+      const response = await fetch(`http://localhost:5000/assign/${projectId}/${userIdToDelete}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
+  
+      if (response.ok) {
+        console.log('Usunieto uzytkownika');
+      } else {
+        notification.error({
+          message: 'Błąd',
+          description: 'Nie udało się usunąć użytkownika, nie jesteś managerem tego projektu..',
+          duration: 2
+        });
+      }
+  
       fetchTasks();
-    }
-    catch (error) {
+    } catch (error) {
       console.error('Blad przy usuwaniu uzytkownika', error);
     }
-
+  
     console.log(`Usuwanie uzytkownika z ID: ${userIdToDelete}`);
     setUserIdToDelete(null);
     hideDeleteModal();
@@ -447,14 +456,14 @@ const Projekt = () => {
                   key={log.log_id}
                   color={log.status === 'Zrobione' ? 'rgb(97, 255, 83)' : log.status === 'Trwajace' ? 'rgb(252, 255, 79)' : log.status === 'Utworzono' ? 'blue' : 'rgb(255, 101, 255)'}
                 >
-                    {log.czas_rozpoczecia && log.status != "Utworzono" && (
+                    {log.czas_rozpoczecia && log.status !== "Utworzono" && (
                       <>
                         Zmiana "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
                         <br />
                         {new Date(log.czas_rozpoczecia).toLocaleString()}
                       </>
                     )}
-                    {log.czas_zakonczenia && log.status != "Utworzono" && (
+                    {log.czas_zakonczenia && log.status !== "Utworzono" && (
                       <>
                         Zmiana "{log.tytul}" na: {log.status} ({log.imie} {log.nazwisko})
                         <br />
