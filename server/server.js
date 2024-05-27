@@ -105,21 +105,51 @@ app.post('/signup', (req, res) => {
       null
     ];
     
-    db.query(sql, values, (err,data) => {
+    db.query("START TRANSACTION", (err) => {
       if (err) {
-        console.log(err);
+        console.log("Error starting transaction", err);
         return res.json("Error");
       }
-      transport.sendMail({
-        from: 'noreply@taskify',
-        to: req.body.email,
-        subject: "Taskify: Weryfikacja konta",
-        html: `Kliknij w link aby dokończyć weryfikację konta: <a href="http://localhost:5000/verify?hashToken=${hashToken}">Zweryfikuj konto</a>`
+
+      db.query(sql, values, (err, data) => {
+        if (err) {
+          console.log(err);
+          db.query("ROLLBACK", (rollbackErr) => {
+            if (rollbackErr) {
+              console.log("Rollback, rejestracja", rollbackErr);
+            }
+            return res.json("Error");
+          });
+        } else {
+          transport.sendMail({
+            from: 'noreply@taskify',
+            to: req.body.email,
+            subject: "Taskify: Weryfikacja konta",
+            html: `Kliknij w link aby dokończyć weryfikację konta: <a href="http://localhost:5000/verify?hashToken=${hashToken}">Zweryfikuj konto</a>`
+          }, (mailErr, info) => {
+            if (mailErr) {
+              console.log("Nie wyslano maila", mailErr);
+              db.query("ROLLBACK", (rollbackErr) => {
+                if (rollbackErr) {
+                  console.log("Rollback, rejestracja", rollbackErr);
+                }
+                return res.json("Error");
+              });
+            } else {
+              db.query("COMMIT", (commitErr) => {
+                if (commitErr) {
+                  console.log("Rollback, rejestracja", commitErr);
+                  return res.json("Error");
+                }
+                return res.json(data);
+              });
+            }
+          });
+        }
       });
-      return res.json(data);
-    })
-  })
-  })
+    });
+  });
+});
 });
 });
 
