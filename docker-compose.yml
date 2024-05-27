@@ -28,6 +28,8 @@ services:
       - PORTMT=2525
       - USERMT=bce7af333b2435
       - PASSMT=8df1b5f24c454b
+    volumes:
+      - ./server/uploads:/usr/src/server/uploads
     depends_on:
       - mysql
 
