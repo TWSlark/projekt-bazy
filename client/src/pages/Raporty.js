@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Select, Space, Segmented } from 'antd';
 import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-    BarChart, Bar, ScatterChart, Scatter, ResponsiveContainer,
+    XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+    BarChart, Bar, ResponsiveContainer,
     RadialBarChart, RadialBar, AreaChart, Area,
 } from 'recharts';
 import Chart from 'react-google-charts';
@@ -10,7 +10,6 @@ import './Raporty.css';
 
 const Raporty = () => {
     const [projects, setProjects] = useState([]);
-    const [selectedProject, setSelectedProject] = useState(null);
     const [projektData, setProjektData] = useState(null);
     const [logData, setLogData] = useState([]);
     const [czasZadania, setCzasZadania] = useState([]);
@@ -18,7 +17,16 @@ const Raporty = () => {
     const [areaChartData, setAreaChartData] = useState([]);
     const [selectedSegment, setSelectedSegment] = useState('project');
     const [ganttData, setGanttData] = useState([]);
-    const [startProjektu, setStartProjektu] = useState(null);
+
+    // usuniecie powiadomienia o wersji google charts xd
+    const originalWarn = console.warn;
+    console.warn = function (...args) {
+        const arg = args && args[0];
+
+        if (arg && arg.includes('Attempting to load version \'51\' of Google Charts')) return;
+
+        originalWarn(...args);
+    };
 
     useEffect(() => {
         fetchProjects();
@@ -99,14 +107,14 @@ const Raporty = () => {
     
             const data = await response.json();
             const data2 = await response2.json();
-            console.log(data);
+            //console.log(data);
+
             const transformedData = zmianyZadania(data.logi);
             setLogData(transformedData);
-            const ganttData = transformLogiToGanttData(data2.logi);
-            console.log(ganttData);
+            const ganttData = logiDoTimeline(data2.logi);
+            //console.log(ganttData);
+
             setGanttData(ganttData);
-            setStartProjektu(data2.dataProjektu);
-            console.log(data2.dataProjektu);
         } catch (error) {
             console.error(error);
         }
@@ -160,7 +168,6 @@ const Raporty = () => {
     };
 
     const handleChange = (value) => {
-        setSelectedProject(value);
         fetchRaport(value);
         fetchLogi(value);
         fetchZadania(value);
@@ -214,7 +221,7 @@ const Raporty = () => {
         lineHeight: '24px',
     };
 
-    const transformLogiToGanttData = (logi) => {
+    const logiDoTimeline = (logi) => {
         return logi.map((log, index) => {
             const startDate = log.czas_rozpoczecia ? new Date(log.czas_rozpoczecia.replace(' ', 'T')) : null;
             const endDate = log.czas_zakonczenia ? new Date(log.czas_zakonczenia.replace(' ', 'T')) : null;
@@ -362,29 +369,20 @@ const Raporty = () => {
                             <div className='charts'>
                                 <ResponsiveContainer width="100%" height={400}>
                                     <Chart
-                                        chartType="Gantt"
+                                        chartType="Timeline"
                                         width="100%"
                                         height="400px"
                                         data={[
                                             [
-                                                { type: 'string', label: 'Task ID' },
-                                                { type: 'string', label: 'Task Name' },
-                                                { type: 'string', label: 'Resource' },
-                                                { type: 'date', label: 'Start Date' },
-                                                { type: 'date', label: 'End Date' },
-                                                { type: 'number', label: 'Duration' },
-                                                { type: 'number', label: 'Percent Complete' },
-                                                { type: 'string', label: 'Dependencies' },
+                                                { type: 'string', id: 'Task Title' },
+                                                { type: 'string', id: 'User Name' },
+                                                { type: 'date', id: 'Start Date' },
+                                                { type: 'date', id: 'End Date' },
                                             ],
-                                            ...ganttData,
+                                            ...ganttData.map(task => [task[1], task[2], task[3], task[4]]),
                                         ]}
                                         options={{
                                             height: 400,
-                                            gantt: {
-                                                trackHeight: 30,
-                                                defaultStartDateMillis: new Date(startProjektu.replace(' ', 'T')),
-                                                criticalPathEnabled: false,
-                                            },
                                         }}
                                     />
                                 </ResponsiveContainer>
