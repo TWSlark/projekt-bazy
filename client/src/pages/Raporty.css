@@ -1,0 +1,41 @@
+.contentBottom-raporty {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    width: 100%;
+    padding-top: 20px;
+}
+
+.metric-container {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.metric {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 22%;
+}
+
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.chart {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-radius: 8px;
+}

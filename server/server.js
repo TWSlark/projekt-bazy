@@ -863,10 +863,10 @@ app.post('/comments', verifyAccessToken, (req, res) => {
 
 const upload = multer({ storage: storage });
 
-app.post('/upload/:taskId', upload.single('file'), verifyAccessToken, async(req, res) => {
+app.post('/upload/:taskId', upload.single('file'), verifyAccessToken, async (req, res) => {
   const authHeader = req.headers.authorization;
-
   let userEmail = null;
+
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring('Bearer '.length);
     const decoded = jwt.verify(token, tokenKey);
@@ -878,32 +878,30 @@ app.post('/upload/:taskId', upload.single('file'), verifyAccessToken, async(req,
   }
 
   if (!req.file) {
-    return res.json("Brak pliku (serwer)");
+    return res.status(400).json({ error: 'Brak pliku (serwer)' });
   }
 
   const zadanie_id = req.params.taskId;
   const danePliku = {
     nazwa_pliku: req.file.filename,
     sciezka_pliku: `http://localhost:5000/uploads/${req.file.filename}`
+  };
+
+  try {
+    const sql = 'INSERT INTO zalaczniki (nazwa_pliku, sciezka_pliku, zadanie_id) VALUES (?, ?, ?)';
+    db.query(sql, [danePliku.nazwa_pliku, danePliku.sciezka_pliku, zadanie_id], (err, data) => {
+      if (err) {
+        console.error('Błąd przy zapisie do bazy:', err);
+        return res.status(500).json({ error: 'Error przy zapisie do bazy' });
+      }
+      res.json("Plik przesłano pomyślnie");
+    });
+  } catch (err) {
+    console.error("Błąd przy zapisie do bazy ", err);
+    return res.status(500).json({ error: 'Błąd serwera' });
   }
-
-  try
-  {
-    const sql = 'INSERT INTO zalaczniki (nazwa_pliku, sciezka_pliku, zadanie_id) VALUES (?,?,?)';
-
-  db.query(sql, [danePliku.nazwa_pliku,danePliku.sciezka_pliku,zadanie_id], (err, data) => {
-    if (err) {
-      return res.json("Error");
-    }
-    res.json("Plik przesłano pomyślnie");
-  });
-
-} catch (err)
-{
-  console.error("Błąd przy zapisie do bazy ", err);
-  return res.status(500).json({ error: 'Błąd serwera' });
-}
 });
+
 
 app.get('/profil', verifyAccessToken, (req, res) => {
   const authHeader = req.headers.authorization;
@@ -1217,7 +1215,41 @@ app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
       res.json({ logi: logi });
     }
   });
-});  
+});
+
+app.get('/raport/:projectId', verifyAccessToken, (req, res) => {
+  const { projectId } = req.params;
+
+  const querry = "CALL raport(?);";
+
+  const zadaniaQuery = 'SELECT z.tytul, z.zadanie_id, COUNT(DISTINCT k.komentarz_id) AS komentarzy, COUNT(DISTINCT zal.zalacznik_id) AS zalacznikow ' +
+    'FROM zadania z ' +
+    'LEFT JOIN komentarze k ON z.zadanie_id = k.zadanie_id ' +
+    'LEFT JOIN zalaczniki zal ON z.zadanie_id = zal.zadanie_id ' +
+    'GROUP BY z.zadanie_id;';
+
+  db.query(querry, [projectId], (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania raportu', error);
+      res.status(500).json({ error: 'Internal Server Error z /raport/:projectId' });
+    } else {
+      const raportResult = results[0];
+
+      db.query(zadaniaQuery, (zadaniaError, zadaniaResults) => {
+        if (zadaniaError) {
+          console.error('Błąd pobierania zadaniaQuery', zadaniaError);
+          res.status(500).json({ error: 'Internal Server Error z /raport/:projectId' });
+        } else {
+          res.json({
+            raport: raportResult,
+            zadania: zadaniaResults
+          });
+        }
+      });
+    }
+  });
+});
+
 
 server.listen(4000, () => {
   console.log('Server is running on port 4000');
