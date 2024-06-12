@@ -1220,14 +1220,16 @@ app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
 app.get('/logi2/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
 
-  const querry = `SELECT
+  const querry = `
+    SELECT
         u.imie,
         u.nazwisko,
         z.tytul,
         pp.zadanie_id,
         pp.czas_rozpoczecia,
         pp.czas_zakonczenia,
-        TIMESTAMPDIFF(SECOND, pp.czas_rozpoczecia, pp.czas_zakonczenia) AS czas_trwania
+        TIMESTAMPDIFF(SECOND, pp.czas_rozpoczecia, pp.czas_zakonczenia) AS czas_trwania,
+        p.data_utworzenia AS data_utworzenia_projektu
     FROM (
         SELECT
             logi.uzytkownik_id,
@@ -1240,35 +1242,27 @@ app.get('/logi2/:projectId', verifyAccessToken, (req, res) => {
     ) AS pp
     JOIN zadania z ON pp.zadanie_id = z.zadanie_id
     JOIN uzytkownik u ON pp.uzytkownik_id = u.uzytkownik_id
-    WHERE pp.czas_zakonczenia IS NOT NULL`;
-
-  subquery = `SELECT data_utworzenia FROM projekty WHERE projekt_id = ?;`;
+    JOIN projekty p ON z.projekt_id = p.projekt_id
+    WHERE pp.czas_zakonczenia IS NOT NULL
+    AND z.projekt_id = ?;`;
 
   db.query(querry, [projectId], (error, results) => {
     if (error) {
       console.error('Błąd pobierania logów', error);
       res.status(500).json({ error: 'Internal Server Error z /logi/:taskId' });
     } else {
-      db.query(subquery, [projectId], (error, data) => {
-        if (error) {
-          console.error('Błąd pobierania daty utworzenia projektu', error);
-          res.status(500).json({ error: 'Internal Server Error z /logi/:taskId' });
-        } else {
-          const logi = results.map((row) => ({
-            imie: row.imie,
-            nazwisko: row.nazwisko,
-            zadanie_id: row.zadanie_id,
-            tytul: row.tytul,
-            czas_rozpoczecia: row.czas_rozpoczecia,
-            czas_zakonczenia: row.czas_zakonczenia,
-            czas_trwania: row.czas_trwania,
-          }));
+      const logi = results.map((row) => ({
+        imie: row.imie,
+        nazwisko: row.nazwisko,
+        zadanie_id: row.zadanie_id,
+        tytul: row.tytul,
+        czas_rozpoczecia: row.czas_rozpoczecia,
+        czas_zakonczenia: row.czas_zakonczenia,
+        czas_trwania: row.czas_trwania,
+        data_utworzenia_projektu: row.data_utworzenia_projektu
+      }));
 
-          const dataProjektu = data[0].data_utworzenia;
-
-          res.json({ logi: logi, dataProjektu: dataProjektu });
-        }
-      });
+      res.json({ logi: logi });
     }
   });
 });
@@ -1276,36 +1270,72 @@ app.get('/logi2/:projectId', verifyAccessToken, (req, res) => {
 app.get('/raport/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
 
-  const querry = "CALL raport(?);";
+  const raportQuery = 'CALL raport(?)';
+  const zadaniaQuery = `
+    SELECT z.tytul, z.zadanie_id, COUNT(DISTINCT k.komentarz_id) AS komentarzy, COUNT(DISTINCT zal.zalacznik_id) AS zalacznikow 
+    FROM zadania z 
+    LEFT JOIN komentarze k ON z.zadanie_id = k.zadanie_id 
+    LEFT JOIN zalaczniki zal ON z.zadanie_id = zal.zadanie_id 
+    WHERE z.projekt_id = ?
+    GROUP BY z.tytul, z.zadanie_id;`;
 
-  const zadaniaQuery = 'SELECT z.tytul, z.zadanie_id, COUNT(DISTINCT k.komentarz_id) AS komentarzy, COUNT(DISTINCT zal.zalacznik_id) AS zalacznikow ' +
-    'FROM zadania z ' +
-    'LEFT JOIN komentarze k ON z.zadanie_id = k.zadanie_id ' +
-    'LEFT JOIN zalaczniki zal ON z.zadanie_id = zal.zadanie_id ' +
-    'GROUP BY z.zadanie_id;';
-
-  db.query(querry, [projectId], (error, results) => {
+  db.query(raportQuery, [projectId], (error, results) => {
     if (error) {
       console.error('Błąd pobierania raportu', error);
-      res.status(500).json({ error: 'Internal Server Error z /raport/:projectId' });
-    } else {
-      const raportResult = results[0];
-
-      db.query(zadaniaQuery, (zadaniaError, zadaniaResults) => {
-        if (zadaniaError) {
-          console.error('Błąd pobierania zadaniaQuery', zadaniaError);
-          res.status(500).json({ error: 'Internal Server Error z /raport/:projectId' });
-        } else {
-          res.json({
-            raport: raportResult,
-            zadania: zadaniaResults
-          });
-        }
-      });
+      return res.status(500).json({ error: 'Internal Server Error' });
     }
+
+    db.query(zadaniaQuery, [projectId], (error, results3) => {
+      if (error) {
+        console.error('Błąd pobierania raportu', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
+
+      const raport = results[0];
+      const zadania = results3;
+
+      res.json({ raport, zadania });
+    });
   });
 });
 
+app.get('/raport2', verifyAccessToken, (req, res) => {
+
+  const authHeader = req.headers.authorization;
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+  
+  if (!userEmail) {
+    return res.status(401).json({ error: 'Brak tokena' });
+  }
+
+  const userIdQuery = 'SELECT uzytkownik_id FROM uzytkownik WHERE email = ?';
+
+  const raportQuery = 'CALL raport2(?)';
+
+  db.query(userIdQuery, [userEmail], (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania id użytkownika', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    const userId = results[0].uzytkownik_id;
+
+    db.query(raportQuery, [userId], (error, results2) => {
+      if (error) {
+        console.error('Błąd pobierania raportu', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
+
+      res.json(results2);
+    });
+  });
+});
 
 server.listen(4000, () => {
   console.log('Server is running on port 4000');

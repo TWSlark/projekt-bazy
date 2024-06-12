@@ -4,6 +4,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, Legend,
     BarChart, Bar, ResponsiveContainer,
     RadialBarChart, RadialBar, AreaChart, Area,
+    Sankey,
 } from 'recharts';
 import Chart from 'react-google-charts';
 import './Raporty.css';
@@ -17,6 +18,7 @@ const Raporty = () => {
     const [areaChartData, setAreaChartData] = useState([]);
     const [selectedSegment, setSelectedSegment] = useState('project');
     const [ganttData, setGanttData] = useState([]);
+    const [raport2 , setRaport2] = useState([]);
 
     // usuniecie powiadomienia o wersji google charts xd
     const originalWarn = console.warn;
@@ -30,12 +32,14 @@ const Raporty = () => {
 
     useEffect(() => {
         fetchProjects();
+        fetchRaport2();
     }, []);
 
     const fetchProjects = async () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             const response = await fetch('http://localhost:5000/projects', {
+                method: 'GET',
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 }
@@ -56,6 +60,7 @@ const Raporty = () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             const response = await fetch(`http://localhost:5000/raport/${value}`, {
+                method: 'GET',
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 }
@@ -68,6 +73,7 @@ const Raporty = () => {
             const data = await response.json();
             setProjektData(data.raport);
             //console.log(data);
+            setRaport2(data.raport2);
 
             const AreaWykres = data.zadania.map((zadanie, index) => ({
                 name: zadanie.tytul,
@@ -75,8 +81,101 @@ const Raporty = () => {
                 zalacznikow: zadanie.zalacznikow,
             }));
 
+            //console.log(AreaWykres);
             setAreaChartData(AreaWykres);
 
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchRaport2 = async (value) => {
+        try {
+            const accessToken = localStorage.getItem('accessToken');
+            const response = await fetch(`http://localhost:5000/raport2`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Nie udało się pobrać raportu');
+            }
+
+            const data = await response.json();
+
+            const data0 = {
+                "nodes": [
+                  {
+                    "name": "Zadań"
+                  },
+                  {
+                    "name": "Do zrobienia"
+                  },
+                  {
+                    "name": "Trwających"
+                  },
+                  {
+                    "name": "Zakończonych"
+                  },
+                  {
+                    "name": "Komentarzy"
+                  },
+                  {
+                    "name": "Załączników"
+                  }
+                ],
+                "links": [
+                  {
+                    "source": 0,
+                    "target": 1,
+                    "value": data[0][0].ilosc_do_zrobienia
+                  },
+                  {
+                    "source": 0,
+                    "target": 2,
+                    "value": data[0][0].ilosc_trwajacych
+                  },
+                  {
+                    "source": 0,
+                    "target": 3,
+                    "value": data[0][0].ilosc_zakonczonych
+                  },
+                  {
+                    "source": 1,
+                    "target": 4,
+                    "value": data[0][0].ilosc_komentarzy_do_zrobienia
+                  },
+                  {
+                    "source": 2,
+                    "target": 4,
+                    "value": data[0][0].ilosc_komentarzy_trwajace
+                  },
+                  {
+                    "source": 3,
+                    "target": 4,
+                    "value": data[0][0].ilosc_komentarzy_zakonczone
+                  },
+                  {
+                    "source": 1,
+                    "target": 5,
+                    "value": data[0][0].ilosc_zalacznikow_do_zrobienia
+                  },
+                  {
+                    "source": 2,
+                    "target": 5,
+                    "value": data[0][0].ilosc_zalacznikow_trwajace
+                  },
+                  {
+                    "source": 3,
+                    "target": 5,
+                    "value": data[0][0].ilosc_zalacznikow_zakonczone
+                  }
+                ].filter(link => link.value > 0)
+            };
+
+            setRaport2(data0);
         } catch (error) {
             console.error(error);
         }
@@ -86,6 +185,7 @@ const Raporty = () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
             const response = await fetch(`http://localhost:5000/logi/${value}`, {
+                method: 'GET',
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 }
@@ -171,6 +271,7 @@ const Raporty = () => {
         fetchRaport(value);
         fetchLogi(value);
         fetchZadania(value);
+        fetchRaport2();
     };
 
     const zmianyZadania = (logi) => {
@@ -237,7 +338,7 @@ const Raporty = () => {
                 null,
             ];
         });
-    };    
+    };
 
     return (
         <div className='content'>
@@ -258,6 +359,7 @@ const Raporty = () => {
                         options={[
                             { label: 'Projekt', value: 'project' },
                             { label: 'Zadania', value: 'tasks' },
+                            { label: 'Wszystkie', value: 'everything'}
                         ]}
                         onChange={(value) => setSelectedSegment(value)}
                         value={selectedSegment}
@@ -363,7 +465,7 @@ const Raporty = () => {
                             </div>
                         </div>
                     </div>
-                ) : (
+                ) : selectedSegment === 'tasks' ? (
                     <div className="dashboard">
                         <div className="charts-container">
                             <div className='charts'>
@@ -390,6 +492,35 @@ const Raporty = () => {
                                     />
                                 </ResponsiveContainer>
                             </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="dashboard">
+                        <div className='charts-container'>
+                            {selectedSegment === 'everything' && raport2 && (
+                                <div className="chart">
+                                    <ResponsiveContainer width="100%" height={600}>
+                                        <Sankey
+                                            width={960}
+                                            height={500}
+                                            data={raport2}
+                                            sort={false}
+                                            margin={{
+                                                left: 200,
+                                                right: 200,
+                                                top: 100,
+                                                bottom: 100,
+                                            }}
+                                            link={{ stroke: '#77c878' }}
+                                        >
+                                            <Tooltip />
+                                            <text x="50%" y="10%" textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="#000">
+                                                Zbiór wszystkich zadań, załączników i komentarzy
+                                            </text>
+                                        </Sankey>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
