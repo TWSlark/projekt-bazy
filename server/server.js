@@ -1217,6 +1217,62 @@ app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
   });
 });
 
+app.get('/logi2/:projectId', verifyAccessToken, (req, res) => {
+  const { projectId } = req.params;
+
+  const querry = `SELECT
+        u.imie,
+        u.nazwisko,
+        z.tytul,
+        pp.zadanie_id,
+        pp.czas_rozpoczecia,
+        pp.czas_zakonczenia,
+        TIMESTAMPDIFF(SECOND, pp.czas_rozpoczecia, pp.czas_zakonczenia) AS czas_trwania
+    FROM (
+        SELECT
+            logi.uzytkownik_id,
+            logi.zadanie_id,
+            logi.czas_rozpoczecia,
+            LEAD(logi.czas_zakonczenia) OVER (
+                PARTITION BY logi.uzytkownik_id, logi.zadanie_id ORDER BY logi.log_id
+            ) AS czas_zakonczenia
+        FROM logi
+    ) AS pp
+    JOIN zadania z ON pp.zadanie_id = z.zadanie_id
+    JOIN uzytkownik u ON pp.uzytkownik_id = u.uzytkownik_id
+    WHERE pp.czas_zakonczenia IS NOT NULL`;
+
+  subquery = `SELECT data_utworzenia FROM projekty WHERE projekt_id = ?;`;
+
+  db.query(querry, [projectId], (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania logów', error);
+      res.status(500).json({ error: 'Internal Server Error z /logi/:taskId' });
+    } else {
+      db.query(subquery, [projectId], (error, data) => {
+        if (error) {
+          console.error('Błąd pobierania daty utworzenia projektu', error);
+          res.status(500).json({ error: 'Internal Server Error z /logi/:taskId' });
+        } else {
+          const logi = results.map((row) => ({
+            imie: row.imie,
+            nazwisko: row.nazwisko,
+            zadanie_id: row.zadanie_id,
+            tytul: row.tytul,
+            czas_rozpoczecia: row.czas_rozpoczecia,
+            czas_zakonczenia: row.czas_zakonczenia,
+            czas_trwania: row.czas_trwania,
+          }));
+
+          const dataProjektu = data[0].data_utworzenia;
+
+          res.json({ logi: logi, dataProjektu: dataProjektu });
+        }
+      });
+    }
+  });
+});
+
 app.get('/raport/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
 
