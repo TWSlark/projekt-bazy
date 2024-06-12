@@ -165,7 +165,7 @@ app.post('/login', (req, res) => {
   const sql = process.env.SQL_LOGIN_QUERY;
 
   db.query(sql, [req.body.email], (err, data) => {
-    console.log(data[0]);
+    //console.log(data[0]);
     if (err) {
       return res.json("Error");
     }
@@ -198,14 +198,14 @@ app.post('/login', (req, res) => {
 
 app.get('/verify', (req, res) => {
   const { hashToken } = req.query;
-  console.log(hashToken);
+  //console.log(hashToken);
   const searchSql = "SELECT email, token FROM uzytkownik WHERE `token` = ?"
 
   db.query(searchSql,[hashToken], (err,result)=>{
     if (err) {
       return res.json({ error: "Błąd szukania użytkownika" });
     }
-    console.log(result[0])
+    //console.log(result[0])
 
     if (result.length>0) {
 
@@ -507,7 +507,7 @@ app.get('/tasks/:projectId', verifyAccessToken, (req, res) => {
                   uzytkownik_id: task.uzytkownik_id
                 };
               });
-              console.log(tasks);
+              //console.log(tasks);
               res.json({ tasks, users });
             }
           });
@@ -831,7 +831,7 @@ app.get('/download/:nazwa', (req, res) => {
 app.post('/comments', verifyAccessToken, (req, res) => {
   const authHeader = req.headers.authorization;
   const {komentarz, zadanie_id} = req.body;
-  console.log(req.body);
+  //console.log(req.body);
 
   let userEmail = null;
   if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -958,7 +958,7 @@ app.put('/updateProfil', verifyAccessToken, async(req, res) => {
 app.post('/requestNewPass', (req, res) => {
 
   const {email} = req.body;
-  console.log(email);
+  //console.log(email);
   
   const sql = "SELECT IsUser(?) as IsUser;";
 
@@ -1040,8 +1040,8 @@ app.post('/newPass', (req, res) => {
   }
   
   const { newHaslo } = req.body
-  console.log('req.body: ', req.body);
-  console.log('userEmail : ', userEmail );
+  //console.log('req.body: ', req.body);
+  //console.log('userEmail : ', userEmail );
   const sql = process.env.SQL_LOGIN_QUERY;
 
   db.query(sql, [userEmail], (err, data) => {
@@ -1088,7 +1088,7 @@ app.get('/time/:taskId', verifyAccessToken, (req, res) => {
 app.post('/reqnewEmail', (req, res) => {
 
   const {email} = req.body;
-  console.log("email użytkownik",email);
+  //console.log("email użytkownik",email);
   
   const sql = "SELECT IsUser(?) as IsUser;";
 
@@ -1162,7 +1162,7 @@ app.post('/newEmail', (req, res) => {
   }
   
   const { newEmail, haslo } = req.body
-  console.log('req.body: ', req.body);
+  //console.log('req.body: ', req.body);
   const sql = process.env.SQL_LOGIN_QUERY;
 
   db.query(sql, [userEmail], (err, data) => {
@@ -1211,7 +1211,7 @@ app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
         nazwisko: row.nazwisko,
       }));
 
-      console.log(logi);
+      //console.log(logi);
       res.json({ logi: logi });
     }
   });

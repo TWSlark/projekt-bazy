@@ -374,15 +374,18 @@ const Raporty = () => {
                                         height="400px"
                                         data={[
                                             [
-                                                { type: 'string', id: 'Task Title' },
-                                                { type: 'string', id: 'User Name' },
-                                                { type: 'date', id: 'Start Date' },
-                                                { type: 'date', id: 'End Date' },
+                                                { type: 'string', id: 'Tytuł zadania' },
+                                                { type: 'string', id: 'Imię i nazwisko' },
+                                                { type: 'date', id: 'Start' },
+                                                { type: 'date', id: 'Koniec' },
                                             ],
                                             ...ganttData.map(task => [task[1], task[2], task[3], task[4]]),
                                         ]}
                                         options={{
                                             height: 400,
+                                            hAxis: {
+                                                format: 'HH:mm',
+                                            },
                                         }}
                                     />
                                 </ResponsiveContainer>
