@@ -4,7 +4,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, Legend,
     BarChart, Bar, ResponsiveContainer,
     RadialBarChart, RadialBar, AreaChart, Area,
-    Sankey,
+    Sankey, ScatterChart, Scatter, ZAxis,
 } from 'recharts';
 import Chart from 'react-google-charts';
 import './Raporty.css';
@@ -19,6 +19,7 @@ const Raporty = () => {
     const [selectedSegment, setSelectedSegment] = useState('project');
     const [ganttData, setGanttData] = useState([]);
     const [raport2 , setRaport2] = useState([]);
+    const [wiadomosci, setWiadomosci] = useState([]);
 
     // usuniecie powiadomienia o wersji google charts xd
     const originalWarn = console.warn;
@@ -207,7 +208,9 @@ const Raporty = () => {
     
             const data = await response.json();
             const data2 = await response2.json();
-            //console.log(data);
+            console.log(data);
+
+            setWiadomosci(data.wiadomosci);
 
             const transformedData = zmianyZadania(data.logi);
             setLogData(transformedData);
@@ -393,6 +396,7 @@ const Raporty = () => {
                                 <p>{projektData && projektData[0] ? (projektData[0].suma_logow / projektData[0].dni_od).toFixed(2) : null} zmian/dzień</p>
                                 <p>{projektData && projektData[0] ? formatTime(projektData[0].suma_szac) : null} suma szacowanego czasu zadań</p>
                                 <p>{projektData && projektData[0] ? formatTime(projektData[0].czas_od) : null} od założenia projektu</p>
+                                <p>{wiadomosci.reduce((total, user) => total + user.messages_sent, 0)} wszystkich wiadomości</p>
                             </div>
                         </div>
                         <div className="charts-container">
@@ -410,7 +414,7 @@ const Raporty = () => {
                                             />
                                             <Legend iconSize={10} layout="vertical" verticalAlign="middle" wrapperStyle={styleRadar} />
                                             <text x="50%" y="10%" textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="#000">
-                                                % szacowanego czasu
+                                                pozostały % szacowanego czasu
                                             </text>
                                         </RadialBarChart>
                                     </ResponsiveContainer>
@@ -464,6 +468,34 @@ const Raporty = () => {
                                         <Bar dataKey="Do zrobienia" stackId="a" fill="#8884d8" />
                                         <Bar dataKey="Zrobione" stackId="a" fill="#82ca9d" />
                                     </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="chart">
+                                <h3>Wysłanych wiadomości na czacie</h3>
+                                <ResponsiveContainer width="100%" height={400}>
+                                    <ScatterChart
+                                        margin={{
+                                            top: 20,
+                                            right: 20,
+                                            bottom: 20,
+                                            left: 20,
+                                        }}
+                                    >
+                                        <CartesianGrid />
+                                        <XAxis
+                                            type="category"
+                                            dataKey={(data) => `${data.imie} ${data.nazwisko}`}
+                                            name="Uzytkownik"
+                                        />
+                                        <YAxis
+                                            type="number"
+                                            dataKey="messages_sent"
+                                            name="Wysłanych wiadmości"
+                                            allowDecimals={false}
+                                        />
+                                        <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                                        <Scatter data={wiadomosci} fill="#8884d8" />
+                                    </ScatterChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>

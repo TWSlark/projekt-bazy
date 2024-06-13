@@ -1191,27 +1191,60 @@ app.post('/newEmail', (req, res) => {
 app.get('/logi/:projectId', verifyAccessToken, (req, res) => {
   const { projectId } = req.params;
 
-  const querry = "SELECT l.*, z.tytul, u.imie, u.nazwisko FROM logi l JOIN zadania z ON l.zadanie_id = z.zadanie_id JOIN projekty p ON z.projekt_id = p.projekt_id LEFT JOIN uzytkownik u ON l.uzytkownik_id = u.uzytkownik_id WHERE p.projekt_id = ? ORDER BY l.log_id DESC;";
-  db.query(querry, [projectId], (error, results) => {
-    if (error) {
-      console.error('Błąd pobierania logów', error);
-      res.status(500).json({ error: 'Internal Server Error z /logi/:taskId' });
-    } else {
-      const logi = results.map((row) => ({
-        log_id: row.log_id,
-        status: row.status,
-        tytul: row.tytul,
-        czas_rozpoczecia: row.czas_rozpoczecia,
-        czas_zakonczenia: row.czas_zakonczenia,
-        zadanie_id: row.zadanie_id,
+  const query = `
+    SELECT l.*, z.tytul, u.imie, u.nazwisko 
+    FROM logi l 
+    JOIN zadania z ON l.zadanie_id = z.zadanie_id 
+    JOIN projekty p ON z.projekt_id = p.projekt_id 
+    LEFT JOIN uzytkownik u ON l.uzytkownik_id = u.uzytkownik_id 
+    WHERE p.projekt_id = ? 
+    ORDER BY l.log_id DESC;
+  `;
+
+  const query2 = `
+    SELECT u.uzytkownik_id, u.email, u.imie, u.nazwisko, COUNT(w.wiadomosc_id) AS messages_sent
+    FROM uzytkownik u
+    JOIN wiadomosci w ON u.uzytkownik_id = w.uzytkownik_id
+    JOIN projekty p ON w.projekt_id = p.projekt_id
+    WHERE w.projekt_id = ?
+    GROUP BY u.uzytkownik_id, u.email, u.imie, u.nazwisko
+    ORDER BY messages_sent DESC;
+  `;
+
+  db.query(query, [projectId], (errorLogs, results) => {
+    if (errorLogs) {
+      console.error('Błąd pobierania logów', errorLogs);
+      return res.status(500).json({ error: 'Internal Server Error z /logi/:taskId' });
+    }
+
+    const logi = results.map((row) => ({
+      log_id: row.log_id,
+      status: row.status,
+      tytul: row.tytul,
+      czas_rozpoczecia: row.czas_rozpoczecia,
+      czas_zakonczenia: row.czas_zakonczenia,
+      zadanie_id: row.zadanie_id,
+      uzytkownik_id: row.uzytkownik_id,
+      imie: row.imie,
+      nazwisko: row.nazwisko,
+    }));
+
+    db.query(query2, [projectId], (errorMessages, response2) => {
+      if (errorMessages) {
+        console.error('Błąd pobierania wiadomości użytkowników', errorMessages);
+        return res.status(500).json({ error: 'Internal Server Error z /logi/:taskId' });
+      }
+
+      const wiadomosci = response2.map((row) => ({
         uzytkownik_id: row.uzytkownik_id,
+        email: row.email,
         imie: row.imie,
         nazwisko: row.nazwisko,
+        messages_sent: row.messages_sent,
       }));
 
-      //console.log(logi);
-      res.json({ logi: logi });
-    }
+      res.json({ logi: logi, wiadomosci: wiadomosci });
+    });
   });
 });
 
