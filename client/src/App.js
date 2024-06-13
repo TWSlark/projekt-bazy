@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import { AppstoreOutlined, CalendarOutlined , CalculatorOutlined, UserOutlined, BuildOutlined, 
-  BookOutlined, DownOutlined, LogoutOutlined } from '@ant-design/icons';
+  BookOutlined, DownOutlined, LogoutOutlined, RobotOutlined } from '@ant-design/icons';
 import { Layout, Menu, Button, Space, Dropdown, Avatar } from 'antd';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom';
 import socketIOClient from 'socket.io-client';
@@ -205,7 +205,7 @@ const stringToColor = (str) => {
     getItem(<Link to="/zadania">Zadania</Link>, '3', <CalculatorOutlined />),
     getItem(<Link to="/czlonkowie">Członkowie</Link>, '4', <UserOutlined />),
     getItem(<Link to="/raporty">Raporty</Link>, '5', <BookOutlined />),
-    getItem(<Link to="/chatbot">Chatbot</Link>, '6', <BookOutlined />),
+    getItem(<Link to="/chatbot">Pomocnik</Link>, '6', <RobotOutlined />),
     { type: 'divider' },
     getItem('Moje projekty', 'grp', null, projectItems, 'group'),
   ];

@@ -1474,12 +1474,11 @@ rasaApp.post('/webhooks/rest/webhook', async (req, res) => {
   }
 });
 
-rasaApp.listen(5005, () => {
-  console.log('Rasa server is running on port 5005');
+rasaApp.listen(5004, () => {
+  console.log('Rasa server is running on port 5004');
 });
 
 //* ALTER TABLE uzytkownik AUTO_INCREMENT = 1; resetowanie auto increment
-
 
 //TODO Dodać reload po utworzeniu projektu
 //TODO Dodać reszte zapytań do .env

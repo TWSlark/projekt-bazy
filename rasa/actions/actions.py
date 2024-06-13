@@ -17,8 +17,6 @@ class ActionGenerateReport(Action):
             tracker: Tracker,
             domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
         
-        project_id = tracker.get_slot("project_id")
-
         try:
             mydb = mysql.connector.connect(
                 host="localhost",
@@ -28,22 +26,31 @@ class ActionGenerateReport(Action):
             )
             
             cursor = mydb.cursor()
-            query = "SELECT * FROM projekty WHERE projekt_id = %s"
-            cursor.execute(query, (project_id,))
-            project = cursor.fetchone()
 
-            if project:
-                report = f"Project Report:\nID: {project[0]}\nName: {project[1]}\nStatus: {project[2]}"
-                dispatcher.utter_message(report)
-            else:
-                dispatcher.utter_message("Project not found.")
+            cursor.execute("SELECT COUNT(*) FROM projekty")
+            liczba_projektow = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM zadania")
+            liczba_zadan = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM wiadomosci")
+            liczba_wiadomosci = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM zalaczniki")
+            liczba_zalacznikow = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM komentarze")
+            liczba_komentarzy = cursor.fetchone()[0]
+
+            raport = f"Raport, w całej bazie danych jest:\nProjektów: {liczba_projektow}\nZadaniń: {liczba_zadan}\nWiadomości: {liczba_wiadomosci}\nZałączników: {liczba_zalacznikow}\nKomentarzy: {liczba_komentarzy}"
+            dispatcher.utter_message(raport)
 
         except mysql.connector.Error as e:
-            error_msg = f"MySQL Error: {str(e)}"
+            error_msg = f"Błąd MySQL: {str(e)}"
             dispatcher.utter_message(error_msg)
 
         except Exception as e:
-            error_msg = f"Unexpected Error: {str(e)}"
+            error_msg = f"Niespodziewany błąd: {str(e)}"
             dispatcher.utter_message(error_msg)
 
         finally:

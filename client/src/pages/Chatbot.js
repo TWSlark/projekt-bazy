@@ -7,8 +7,7 @@ const Chatbot = () => {
 
     const sendMessage = async () => {
         try {
-            const response = await axios.post('http://localhost:5005/webhooks/rest/webhook', {
-                sender: 'user',
+            const response = await axios.post('http://localhost:5004/webhooks/rest/webhook', {
                 message: message,
             }, {
                 headers: {
@@ -16,14 +15,12 @@ const Chatbot = () => {
                 }
             });
     
-            console.log('Response from server:', response.data);
+            console.log('Odpowiedz od rasa:', response.data);
     
-            // Ensure response.data is an array
             if (!Array.isArray(response.data)) {
                 throw new Error('Unexpected response format: data is not an array');
             }
     
-            // Map over response.data assuming it's an array of objects
             const messages = response.data.map((res) => res.text);
             setChat([
                 ...chat,
@@ -32,7 +29,7 @@ const Chatbot = () => {
             ]);
             setMessage('');
         } catch (error) {
-            console.error('Error fetching or processing data:', error.message);
+            console.error('Nie udało się odebrać wiadomości:', error.message);
         }
     };
 
