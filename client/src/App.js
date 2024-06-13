@@ -12,6 +12,7 @@ import Kalendarz from './pages/Kalendarz';
 import Zadania from './pages/Zadania';
 import Czlonkowie from './pages/Czlonkowie';
 import Raporty from './pages/Raporty';
+import Chatbot from './pages/Chatbot';
 import Projekt from './pages/Projekt';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -38,6 +39,7 @@ const App = () => {
             <Route path="/zadania" element={<Zadania />} />
             <Route path="/czlonkowie" element={<Czlonkowie />} />
             <Route path="/raporty" element={<Raporty />} />
+            <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/projekt/:projectId" element={<Projekt />} />
             <Route path="/projekt/:projectId/zadanie/:taskId" element={<Zadanie/>}/>
             <Route path="/profil" element={<Profil />} />
@@ -203,6 +205,7 @@ const stringToColor = (str) => {
     getItem(<Link to="/zadania">Zadania</Link>, '3', <CalculatorOutlined />),
     getItem(<Link to="/czlonkowie">Członkowie</Link>, '4', <UserOutlined />),
     getItem(<Link to="/raporty">Raporty</Link>, '5', <BookOutlined />),
+    getItem(<Link to="/chatbot">Chatbot</Link>, '6', <BookOutlined />),
     { type: 'divider' },
     getItem('Moje projekty', 'grp', null, projectItems, 'group'),
   ];

@@ -13,6 +13,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const http = require('http');
+const axios = require('axios');
 
 const server = http.createServer();
 const io = require('socket.io')(server, {
@@ -1450,11 +1451,32 @@ server.listen(4000, () => {
   console.log('Server is running on port 4000');
 });
 
-
 app.listen(5000, () => {
     console.log('Server is running on port 5000');
 });
 
+const rasaApp = express();
+rasaApp.use(express.json());
+rasaApp.use(cors());
+
+rasaApp.post('/webhooks/rest/webhook', async (req, res) => {
+  try {
+    console.log('Wiadomosc dla rasa:', req.body);
+
+    const rasaResponse = await axios.post('http://localhost:5005/webhooks/rest/webhook', req.body);
+
+    console.log('Odpowiedz od rasa:', rasaResponse.data);
+
+    res.json(rasaResponse.data);
+  } catch (error) {
+    console.error('Problem z Rasa:', error.message);
+    res.status(500).json({ error: 'Problem z Rasa' });
+  }
+});
+
+rasaApp.listen(5005, () => {
+  console.log('Rasa server is running on port 5005');
+});
 
 //* ALTER TABLE uzytkownik AUTO_INCREMENT = 1; resetowanie auto increment
 

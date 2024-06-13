@@ -580,7 +580,7 @@ const Projekt = () => {
               onChange={(e) => setMessage(e.target.value)}
               style={{ flexGrow: 1, marginRight: '10px' }}
             />
-            <button onClick={sendMessage}>Send</button>
+            <button onClick={sendMessage}>Wyślij</button>
           </div>
         </div> 
       </div>
