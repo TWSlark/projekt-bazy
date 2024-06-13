@@ -361,7 +361,10 @@ const Raporty = () => {
                             { label: 'Zadania', value: 'tasks' },
                             { label: 'Wszystkie', value: 'everything'}
                         ]}
-                        onChange={(value) => setSelectedSegment(value)}
+                        onChange={(value) => {
+                            setSelectedSegment(value)
+                            fetchRaport2()
+                        }}
                         value={selectedSegment}
                     />
                 </Space>
@@ -388,7 +391,7 @@ const Raporty = () => {
                             <div className="metric">
                                 <h2>Inne</h2>
                                 <p>{projektData && projektData[0] ? (projektData[0].suma_logow / projektData[0].dni_od).toFixed(2) : null} zmian/dzień</p>
-                                <p>{projektData && projektData[0] ? formatTime(projektData[0].suma_szac) : null} suma szacowanego czasu</p>
+                                <p>{projektData && projektData[0] ? formatTime(projektData[0].suma_szac) : null} suma szacowanego czasu zadań</p>
                                 <p>{projektData && projektData[0] ? formatTime(projektData[0].czas_od) : null} od założenia projektu</p>
                             </div>
                         </div>
@@ -515,7 +518,7 @@ const Raporty = () => {
                                         >
                                             <Tooltip />
                                             <text x="50%" y="10%" textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="#000">
-                                                Zbiór wszystkich zadań, załączników i komentarzy
+                                                Zbiór wszystkich zadań, załączników i komentarzy w projektach do których należysz
                                             </text>
                                         </Sankey>
                                     </ResponsiveContainer>

@@ -93,6 +93,31 @@ const Projekt = () => {
   const [userIdToDelete, setUserIdToDelete] = useState(null);
   const [logi, setLogi] = useState([]);
   const [logModal, setLogModal] = useState(false);
+  const [message, setMessage] = useState('');
+  const [userId, setUserId] = useState(null);
+  const [fetchedMessages, setFetchedMessages] = useState([]);
+  const [wielkoscChatu, setWielokscChatu] = useState(300);
+
+  const setWielkoscChatu = (newHeight) => {
+    setWielokscChatu(newHeight);
+  };
+
+  const getUserId = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch('http://localhost:5000/userId', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      
+      const data = await response.json();
+      setUserId(data.uzytkownik_id);
+    } catch (error) {
+      console.error('Błąd przy pobieraniu ID użytkownika', error);
+    }
+  };
 
   const showLogModal = () => {
     setLogModal(true);
@@ -135,17 +160,68 @@ const Projekt = () => {
   };
 
   useEffect(() => {
-    isUserAssigned();
+    fetchMessages();
+  }, [projectId]);
 
+  useEffect(() => {
     const socket = socketIOClient('http://localhost:4000');
 
+    isUserAssigned();
+    getUserId();
+  
+    socket.on('receiveMessage', (message) => {
+      setFetchedMessages((prevMessages) => [...prevMessages, message]);
+    });
+  
     socket.on('taskUpdate', (data) => {
       fetchTasks();
       fetchLogi();
     });
-
+  
     return () => socket.disconnect();
   }, [projectId]);
+
+  const sendMessage = async () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (message.trim()) {
+      const newMessage = { tresc: message, uzytkownik_id: userId, projekt_id: projectId };
+      try {
+        const response = await fetch('http://localhost:5000/sendMessage', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(newMessage)
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+  
+        setMessage('');
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5000/messages/${projectId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+  
+      const data = await response.json();
+      setFetchedMessages(data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
 
   const fetchLogi = async () => {
     try {
@@ -162,7 +238,7 @@ const Projekt = () => {
 
       if (response.ok) {
         setLogi(data.logi);
-        console.log(data.logi);
+        //console.log(data.logi);
       } else {
         throw new Error('Nie udało się pobrać logów');
       }
@@ -487,6 +563,37 @@ const Projekt = () => {
           <Container status="Trwajace" />
           <Container status="Zrobione" />
         </DndProvider>
+      </div>
+      <div style={{ position: 'fixed', bottom: '10px', left: '10px', zIndex: 1000, width: '300px' }}>
+        <div style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '10px', backgroundColor: 'white' }}>
+          <div style={{ maxHeight: wielkoscChatu, overflowY: 'scroll' }}>
+            {fetchedMessages.map((msg, index) => (
+              <div key={index} style={{ margin: '5px 0' }}>
+                <strong>{msg.imie} {msg.nazwisko}:</strong> {msg.tresc}
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', marginTop: '10px' }}>
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              style={{ flexGrow: 1, marginRight: '10px' }}
+            />
+            <button onClick={sendMessage}>Send</button>
+          </div>
+        </div> 
+      </div>
+      <div style={{ position: 'fixed', bottom: '10px', right: '10px', zIndex: 1000 }}>
+        <label>Wielkość chatu:</label>
+        <input
+          type="range"
+          min="100"
+          max="600"
+          step="10"
+          value={wielkoscChatu}
+          onChange={(e) => setWielkoscChatu(parseInt(e.target.value))}
+        />
       </div>
     </div>
   );

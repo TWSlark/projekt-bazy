@@ -22,8 +22,7 @@ const io = require('socket.io')(server, {
 });
 
 io.on('connection', (socket) => {
-  socket.on('disconnect', () => {
-  });
+  socket.on('disconnect', () => {});
 });
 
 const tokenKey = process.env.TOKENKEY;
@@ -954,7 +953,6 @@ app.put('/updateProfil', verifyAccessToken, async(req, res) => {
   }
 });
 
-
 app.post('/requestNewPass', (req, res) => {
 
   const {email} = req.body;
@@ -1334,6 +1332,84 @@ app.get('/raport2', verifyAccessToken, (req, res) => {
 
       res.json(results2);
     });
+  });
+});
+
+app.get('/userId', verifyAccessToken, (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  let userEmail = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring('Bearer '.length);
+    const decoded = jwt.verify(token, tokenKey);
+    userEmail = decoded.email;
+  }
+  
+  if (!userEmail) {
+    return res.status(401).json({ error: 'Brak tokena' });
+  }
+
+  const userIdQuery = 'SELECT uzytkownik_id FROM uzytkownik WHERE email = ?';
+
+  db.query(userIdQuery, [userEmail], (error, results) => {
+    if (error) {
+      console.error('Błąd pobierania id użytkownika', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+app.post('/sendMessage', verifyAccessToken, (req, res) => {
+  const { tresc, uzytkownik_id, projekt_id } = req.body;
+
+  if (!tresc || !uzytkownik_id || !projekt_id) {
+    console.error('Invalid message data:', { tresc, uzytkownik_id, projekt_id });
+    return res.status(400).json({ error: 'Invalid message data' });
+  }
+
+  const infoQuery = 'SELECT u.imie, u.nazwisko FROM uzytkownik u WHERE uzytkownik_id = ?';
+  const insertMessageSql = 'INSERT INTO wiadomosci (tresc, uzytkownik_id, projekt_id) VALUES (?, ?, ?)';
+
+  db.query(infoQuery, [uzytkownik_id], (err, result) => {
+    if (err) {
+      console.error('Error fetching user info:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (result.length === 0) {
+      console.error('User not found with ID:', uzytkownik_id);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { imie, nazwisko } = result[0];
+
+    db.query(insertMessageSql, [tresc, uzytkownik_id, projekt_id], (err, result) => {
+      if (err) {
+        console.error('Error inserting message:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      const newMessage = { tresc, imie, nazwisko, uzytkownik_id, projekt_id };
+      io.emit('receiveMessage', newMessage);
+
+      res.status(200).json({ success: true, messageId: result.insertId });
+    });
+  });
+});
+
+app.get('/messages/:projectId', verifyAccessToken, (req, res) => {
+  const { projectId } = req.params;
+
+  const messagesSql = 'SELECT w.wiadomosc_id, w.tresc, w.data_utworzenia, u.imie, u.nazwisko FROM wiadomosci w JOIN uzytkownik u ON w.uzytkownik_id = u.uzytkownik_id WHERE w.projekt_id = ? ORDER BY w.data_utworzenia ASC';
+  db.query(messagesSql, [projectId], (err, messages) => {
+    if (err) {
+      console.error('Error fetching messages:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    res.json(messages);
   });
 });
 
