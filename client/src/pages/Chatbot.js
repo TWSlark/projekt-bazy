@@ -33,18 +33,39 @@ const Chatbot = () => {
         }
     };
 
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    };
+
     return (
-        <div>
-            <div>
-                {chat.map((chat, index) => (
-                    <div key={index} style={{ textAlign: chat.sender === 'bot' ? 'left' : 'right' }}>
-                        <p>{chat.message}</p>
-                    </div>
-                ))}
+        <>
+            <div className='contentTop'>
+                <h1>Chatbot</h1>
             </div>
-            <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} />
-            <button onClick={sendMessage}>Send</button>
-        </div>
+            <div className="chat-container">
+                <div className="messages-container">
+                    {chat.map((chat, index) => (
+                        <div key={index} className={`message ${chat.sender}`}>
+                            {chat.sender === 'bot' ? (
+                                <p dangerouslySetInnerHTML={{ __html: chat.message }} />
+                            ) : (
+                                <p>{chat.message}</p>
+                            )}
+                        </div>
+                    ))}
+                </div>
+                <input
+                    type="text"
+                    className="message-input"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                />
+                <button className="send-button" onClick={sendMessage}>Wyślij</button>
+            </div>
+        </>
     );
 };
 

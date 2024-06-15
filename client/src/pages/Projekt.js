@@ -476,6 +476,12 @@ const Projekt = () => {
     );
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+};
+
   return (
     <div className='content'>
       <div className='contentTop'>
@@ -578,6 +584,7 @@ const Projekt = () => {
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
               style={{ flexGrow: 1, marginRight: '10px' }}
             />
             <button onClick={sendMessage}>Wyślij</button>

@@ -1,10 +1,5 @@
 version: "3.1"
 
-slots:
-  project_id:
-    type: text
-    mappings: []
-
 intents:
   - greet
   - goodbye
@@ -13,11 +8,29 @@ intents:
   - mood_great
   - mood_unhappy
   - bot_challenge
-  - raport
+  - create_report
+  - provide_project
+
+entities:
+  - person
+  - project_name
+
+slots:
+  person:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: person
+
+  project_name:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: project_name
 
 responses:
   utter_greet:
-  - text: "Hey! How are you?"
+  - text: "Witam!"
 
   utter_cheer_up:
   - text: "Here is something to cheer you up:"
@@ -30,16 +43,23 @@ responses:
   - text: "Great, carry on!"
 
   utter_goodbye:
-  - text: "Bye"
+  - text: "Żegnaj!"
 
   utter_iamabot:
   - text: "I am a bot, powered by Rasa."
 
-  utter_raport:
-  - text: "Tworzenie raportu..."
+  utter_ask_person:
+    - text: "Dla kogo mam stworzyć raport?"
+
+  utter_ask_project:
+    - text: "Nad jakim projektem pracujesz?"
+
+  utter_project_received:
+    - text: "Dzięki za podanie nazwy projektu."
 
 actions:
-  - action_generate_report
+  - action_create_report
+  - action_extract_project_name
 
 session_config:
   session_expiration_time: 60

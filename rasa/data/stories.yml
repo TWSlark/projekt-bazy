@@ -29,8 +29,12 @@ stories:
   - intent: deny
   - action: utter_goodbye
 
-- story: generate report path
+- story: create a report
   steps:
-  - intent: raport
-  - action: utter_raport
-  - action: action_generate_report
+  - intent: create_report
+  - action: action_create_report
+
+- story: provide project
+  steps:
+  - intent: provide_project
+  - action: action_extract_project_name

@@ -3,51 +3,35 @@ version: "3.1"
 nlu:
 - intent: greet
   examples: |
-    - hey
-    - hello
-    - hi
-    - hello there
-    - good morning
-    - good evening
-    - moin
-    - hey there
-    - let's go
-    - hey dude
-    - goodmorning
-    - goodevening
-    - good afternoon
+    - cześć
+    - witaj
+    - dzień dobry
+    - dobry wieczór
+    - halo
 
 - intent: goodbye
   examples: |
-    - cu
-    - good by
-    - cee you later
-    - good night
-    - bye
-    - goodbye
-    - have a nice day
-    - see you around
-    - bye bye
-    - see you later
+    - na razie
+    - do zobaczenia
+    - żegnaj
+    - pa pa
+    - do widzenia
+    - narka
 
 - intent: affirm
   examples: |
-    - yes
-    - y
-    - indeed
-    - of course
-    - that sounds good
-    - correct
+    - tak
+    - pewnie
+    - dobrze
+    - zgadzam się
+    - brzmi świetnie
 
 - intent: deny
   examples: |
-    - no
-    - n
-    - never
-    - I don't think so
-    - don't like that
-    - no way
-    - not really
+    - nie
+    - nigdy
+    - nie jestem pewien
+    - nie sądzę
 
 - intent: mood_great
   examples: |
@@ -89,9 +73,50 @@ nlu:
     - am I talking to a bot?
     - am I talking to a human?
 
-- intent: raport
+- intent: create_report
   examples: |
-    - generuj raport
-    - raport
-    - wyswietl raport
-    - raporty
+    - Stwórz raport dla [Jan Kowalski](person)
+    - Potrzebuję raportu dla [Anna Nowak](person)
+    - Zrób raport dla [Piotr Wiśniewski](person)
+    - Raport dla [Tomasz Wachala](person)
+    - Proszę o raport dla [Klaudiusz Wachowicz](person)
+    - Poproszę raport dla [Marta Nowicka](person)
+    - Chcę raport dla [Marcin Zieliński](person)
+    - Raport dla użytkownika [Ewa Kowalska](person)
+    - Utwórz raport dla [Adam Nowak](person)
+    - Raport dla [Agnieszka Nowakowska](person)
+    - Stwórz raport dla [Mateusz Wiśniewski](person)
+    - Potrzebuję raportu dla [Monika Kwiatkowska](person)
+    - Zrób raport dla [Andrzej Lewandowski](person)
+    - Raport dla [Katarzyna Kamińska](person)
+    - Proszę o raport dla [Łukasz Wojciechowski](person)
+    - Chcę raport dla [Dominika Szymańska](person)
+    - Poproszę raport dla [Janina Kowal](person)
+    - Utwórz raport dla [Damian Wójcik](person)
+    - Raport dla [Oliwia Mazur](person)
+
+- intent: provide_project
+  examples: |
+    - Dane projektu [Bazy danych](project_name)
+    - Projekt [System zarządzania](project_name)
+    - Pokaż dane projektu [Naprawa](project_name)
+    - Informacje o projekcie [Drugi dla testu](project_name)
+    - Szczegóły projektu [Rozwój oprogramowania](project_name)
+    - Dane dla projektu [Migracja serwerów](project_name)
+    - Projekt [Modernizacja infrastruktury](project_name)
+    - Informacje o projekcie [Automatyzacja procesów](project_name)
+    - Szczegóły projektu [Integracja systemów](project_name)
+    - Dane projektu [Wdrożenie nowego CRM](project_name)
+    - Informacje o projekcie [Optymalizacja wydajności](project_name)
+    - Projekt [Przebudowa strony internetowej](project_name)
+    - Dane dla projektu [Testowanie bezpieczeństwa](project_name)
+    - Szczegóły projektu [Analiza danych](project_name)
+    - Projekt [Rozwój aplikacji mobilnej](project_name)
+    - Informacje o projekcie [Aktualizacja systemu](project_name)
+    - Szczegóły projektu [Konfiguracja sieci](project_name)
+    - Dane dla projektu [Zarządzanie zasobami](project_name)
+    - Projekt [Szkolenie pracowników](project_name)
+
+entities:
+- person
+- project_name
