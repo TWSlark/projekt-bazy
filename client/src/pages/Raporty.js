@@ -15,6 +15,7 @@ const Raporty = () => {
     const [logData, setLogData] = useState([]);
     const [czasZadania, setCzasZadania] = useState([]);
     const [iloscZadan, setIloscZadan] = useState([]);
+    const [wszystkieZadania, setWszystkieZadania] = useState([]);
     const [areaChartData, setAreaChartData] = useState([]);
     const [selectedSegment, setSelectedSegment] = useState('project');
     const [ganttData, setGanttData] = useState([]);
@@ -208,7 +209,7 @@ const Raporty = () => {
     
             const data = await response.json();
             const data2 = await response2.json();
-            console.log(data);
+            //console.log(data);
 
             setWiadomosci(data.wiadomosci);
 
@@ -242,6 +243,8 @@ const Raporty = () => {
             const transformedData = statusyZadania(data.tasks, data.users);
             setIloscZadan(transformedData);
             //console.log(transformedData);
+
+            setWszystkieZadania(data.tasks);
 
             const czasZadania = data.tasks.map(task => {
                 const [hours, minutes, seconds] = task.pozostaly_czas.split(':').map(Number);
@@ -343,6 +346,11 @@ const Raporty = () => {
         });
     };
 
+    const timeToSeconds = (time) => {
+        const [hours, minutes, seconds] = time.split(':').map(Number);
+        return (hours * 3600) + (minutes * 60) + seconds;
+    };
+
     return (
         <div className='content'>
             <div className='contentTop'>
@@ -361,7 +369,8 @@ const Raporty = () => {
                     <Segmented
                         options={[
                             { label: 'Projekt', value: 'project' },
-                            { label: 'Zadania', value: 'tasks' },
+                            { label: 'Zadania', value: 'tasks'},
+                            { label: 'Timeline', value: 'timeline' },
                             { label: 'Wszystkie', value: 'everything'}
                         ]}
                         onChange={(value) => {
@@ -379,6 +388,12 @@ const Raporty = () => {
                                 <p>W ciągu</p>
                                 <p>{projektData && projektData[0] ? formatTime(projektData[0].suma_czasu) : null}</p>
                                 <p>ukończono {projektData && projektData[0] ? (projektData[0].zrobione / (projektData[0].zrobione + projektData[0].do_zrobienia + projektData[0].trwajace) * 100).toFixed(2) : null}% zadań</p>
+                                <p>{projektData && projektData[0] ? formatTime(projektData[0].suma_szac) : null} suma szacowanego czasu zadań</p>
+                            </div>
+                            <div className="metric">
+                                <h2>Efektywność</h2>
+                                <p>{projektData && projektData[0] ? 100 - ((projektData[0].suma_czasu / projektData[0].suma_szac) * 100).toFixed(2) : null}%</p>
+                                <p>pozostałego czasu nad zadaniami do szacowanego</p>
                             </div>
                             <div className="metric">
                                 <h2>Statusy zadań</h2>
@@ -387,14 +402,8 @@ const Raporty = () => {
                                 <p>{projektData && projektData[0] ? projektData[0].zrobione : null} zrobione</p>
                             </div>
                             <div className="metric">
-                                <h2>Efektywność</h2>
-                                <p>{projektData && projektData[0] ? 100 - ((projektData[0].suma_czasu / projektData[0].suma_szac) * 100).toFixed(2) : null}%</p>
-                                <p>pozostałego czasu nad zadaniami do szacowanego</p>
-                            </div>
-                            <div className="metric">
                                 <h2>Inne</h2>
                                 <p>{projektData && projektData[0] ? (projektData[0].suma_logow / projektData[0].dni_od).toFixed(2) : null} zmian/dzień</p>
-                                <p>{projektData && projektData[0] ? formatTime(projektData[0].suma_szac) : null} suma szacowanego czasu zadań</p>
                                 <p>{projektData && projektData[0] ? formatTime(projektData[0].czas_od) : null} od założenia projektu</p>
                                 <p>{wiadomosci.reduce((total, user) => total + user.messages_sent, 0)} wszystkich wiadomości</p>
                             </div>
@@ -501,6 +510,37 @@ const Raporty = () => {
                         </div>
                     </div>
                 ) : selectedSegment === 'tasks' ? (
+                    <div className="dashboard">
+                        {console.log(wszystkieZadania)}
+                        <div>
+                            <h3>Lista zadań:</h3>
+                            <table className='lista_zadan'>
+                                <thead>
+                                    <tr>
+                                        <th>Tytuł</th>
+                                        <th>Opis</th>
+                                        <th>Status</th>
+                                        <th>Pozostały czas</th>
+                                        <th>Szacowany czas</th>
+                                        <th>Efektywność</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {wszystkieZadania.map((task) => (
+                                        <tr key={task.id}>
+                                            <td>{task.tytul}</td>
+                                            <td>{task.opis}</td>
+                                            <td>{task.status}</td>
+                                            <td>{task.pozostaly_czas}</td>
+                                            <td>{task.szacowany_czas}</td>
+                                            <td>{Math.round((timeToSeconds(task.pozostaly_czas) / timeToSeconds(task.szacowany_czas)) * 100)}%</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ) : selectedSegment === 'timeline' ? (
                     <div className="dashboard">
                         <div className="charts-container">
                             <div className='charts'>

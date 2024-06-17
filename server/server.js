@@ -632,6 +632,60 @@ app.put('/tasks/:taskId/complete', verifyAccessToken, async (req, res) => {
   }
 });
 
+app.put('/tasks/:taskId/szacowanyCzas', verifyAccessToken, async (req, res) => {
+  const { taskId } = req.params;
+  const { godziny, minuty } = req.body;
+
+  const newTime = `${godziny}:${minuty}:00`;
+
+  try {
+    const selectQuery = 'SELECT szacowany_czas FROM zadania WHERE zadanie_id = ?';
+    db.query(selectQuery, [taskId], (selectError, results) => {
+      if (selectError) {
+        console.error('Błąd pobierania szacowanego czasu zadania', selectError);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+
+      const currentSzacowanyCzas = results[0].szacowany_czas;
+      const [currentHours, currentMinutes, currentSeconds] = currentSzacowanyCzas.split(':').map(Number);
+      const [newHours, newMinutes, newSeconds] = newTime.split(':').map(Number);
+
+      let totalHours = currentHours + newHours;
+      let totalMinutes = currentMinutes + newMinutes;
+      let totalSeconds = currentSeconds + newSeconds;
+
+      if (totalSeconds >= 60) {
+        totalMinutes += Math.floor(totalSeconds / 60);
+        totalSeconds = totalSeconds % 60;
+      }
+
+      if (totalMinutes >= 60) {
+        totalHours += Math.floor(totalMinutes / 60);
+        totalMinutes = totalMinutes % 60;
+      }
+
+      const updatedSzacowanyCzas = `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}:${String(totalSeconds).padStart(2, '0')}`;
+
+      const updateQuery = 'UPDATE zadania SET szacowany_czas = ? WHERE zadanie_id = ?';
+      db.query(updateQuery, [updatedSzacowanyCzas, taskId], (updateError) => {
+        if (updateError) {
+          console.error('Błąd aktualizacji szacowanego czasu zadania', updateError);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        res.status(200).json({ message: 'Szacowany czas zadania zaktualizowany pomyślnie' });
+      });
+    });
+  } catch (error) {
+    console.error('Błąd aktualizacji szacowanego czasu zadania', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/kalendarz', verifyAccessToken, async (req, res) => {
   try {
     const authHeader = req.headers.authorization;

@@ -500,3 +500,41 @@
 .send-button:hover {
     background-color: #45a049;
 }
+
+.lista_zadan {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Arial', sans-serif;
+    margin-top: 20px;
+}
+
+.lista_zadan thead {
+    background-color: #ADD8E6;
+    color: white;
+}
+
+.lista_zadan th, .lista_zadan td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.lista_zadan tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.lista_zadan tr:hover {
+    background-color: #ddd;
+}
+
+.lista_zadan th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #adc6e6;
+    color: white;
+}
+
+.lista_zadan td {
+    padding: 8px;
+}

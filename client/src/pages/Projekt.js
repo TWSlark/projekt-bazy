@@ -43,6 +43,34 @@ const Task = ({ id, title, description, status, priority, assignedUser, estimate
     setIsModalVisible(false);
   };
 
+  const [isModalVisibleDodawanieCzasu, setIsModalVisibleDodawanieCzasu] = useState(false);
+
+  const showDodawanieCzasu = () => {
+    setIsModalVisibleDodawanieCzasu(true);
+  };
+
+  const handleOkDodawanieCzasu = () => {
+    const godziny = document.querySelector('input[name="godziny"]').value;
+    const minuty = document.querySelector('input[name="minuty"]').value;
+
+    const accessToken = localStorage.getItem('accessToken');
+
+    fetch(`http://localhost:5000/tasks/${id}/szacowanyCzas`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ godziny, minuty }),
+    });
+
+    setIsModalVisibleDodawanieCzasu(false);
+  };
+
+  const handleCancelDodawanieCzasu = () => {
+    setIsModalVisibleDodawanieCzasu(false);
+  };
+
   const { Countdown } = Statistic;
 
   const [hours, minutes, seconds] = estimatedTime.split(":").map(Number);
@@ -60,6 +88,12 @@ const Task = ({ id, title, description, status, priority, assignedUser, estimate
         <Countdown title="Pozostały szacowany czas: " value={Date.now() + remainingTime} />
       ) : (
         <div>
+          <Button type="secondary" onClick={showDodawanieCzasu} icon={<PlusCircleOutlined />}>
+          </Button>
+          <Modal title="Dodawanie szacowanego czasu" open={isModalVisibleDodawanieCzasu} onOk={handleOkDodawanieCzasu} onCancel={handleCancelDodawanieCzasu}>
+            <p>Dodaj szacowany czas:</p>
+            <input defaultValue={0} type="number" min="0" max="838" step="1" name="godziny" />:<input defaultValue={0} type="number" min="0" max="59" step="1" name="minuty" />
+          </Modal>
           <small style={{color: "grey"}}>Przewidywany szacowany czas: </small><br/>
           <h3 style={{fontWeight: "450"}}>{estimatedTime}</h3>
         </div>
